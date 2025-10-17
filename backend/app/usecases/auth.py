@@ -1,7 +1,7 @@
-
-from app.core.security import create_access_token, hash_password, verify_password
 from app.core.config import settings
+from app.core.security import create_access_token, hash_password, verify_password
 from app.domain.repositories import IUserRepo, IOTPRepo
+
 
 class AuthUseCase:
     def __init__(self, users: IUserRepo, otps: IOTPRepo):

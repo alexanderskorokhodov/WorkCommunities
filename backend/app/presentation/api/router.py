@@ -1,5 +1,5 @@
-
 from fastapi import APIRouter
+
 from . import auth_endpoints
 
 api = APIRouter()

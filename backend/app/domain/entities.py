@@ -1,7 +1,7 @@
-
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
+
 
 @dataclass
 class User:
@@ -12,6 +12,7 @@ class User:
     password_hash: Optional[str]
     created_at: datetime
 
+
 @dataclass
 class Profile:
     id: str
@@ -20,11 +21,13 @@ class Profile:
     city: Optional[str]
     interests: list[str]
 
+
 @dataclass
 class Company:
     id: str
     name: str
     description: Optional[str]
+
 
 @dataclass
 class Community:
@@ -34,6 +37,7 @@ class Community:
     tags: list[str]
     is_archived: bool
 
+
 @dataclass
 class Membership:
     id: str
@@ -41,11 +45,13 @@ class Membership:
     community_id: str
     role: str  # member | admin
 
+
 @dataclass
 class Follow:
     id: str
     user_id: str
     community_id: str
+
 
 @dataclass
 class Post:
@@ -57,6 +63,7 @@ class Post:
     featured: bool
     created_at: datetime
 
+
 @dataclass
 class Story:
     id: str
@@ -65,6 +72,7 @@ class Story:
     media_url: str
     created_at: datetime
 
+
 @dataclass
 class Event:
     id: str
@@ -72,6 +80,7 @@ class Event:
     title: str
     starts_at: datetime
     city: str | None
+
 
 @dataclass
 class OTP:

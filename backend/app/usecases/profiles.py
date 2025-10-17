@@ -1,5 +1,5 @@
-
 from app.domain.repositories import IProfileRepo
+
 
 class ProfileUseCase:
     def __init__(self, profiles: IProfileRepo):

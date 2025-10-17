@@ -1,6 +1,7 @@
+from typing import Optional
 
 from pydantic import BaseModel
-from typing import Optional
+
 
 class PostCreateIn(BaseModel):
     community_id: str
@@ -8,10 +9,12 @@ class PostCreateIn(BaseModel):
     body: str
     featured: bool = False
 
+
 class PostUpdateIn(BaseModel):
     title: Optional[str] = None
     body: Optional[str] = None
     featured: Optional[bool] = None
+
 
 class PostOut(BaseModel):
     id: str
@@ -21,10 +24,12 @@ class PostOut(BaseModel):
     body: str
     featured: bool
 
+
 class StoryCreateIn(BaseModel):
     community_id: str
     title: str
     media_url: str
+
 
 class StoryOut(BaseModel):
     id: str

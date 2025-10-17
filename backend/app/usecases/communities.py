@@ -1,5 +1,5 @@
-
 from app.domain.repositories import ICommunityRepo, IMembershipRepo, IFollowRepo
+
 
 class CommunityUseCase:
     def __init__(self, communities: ICommunityRepo, members: IMembershipRepo, follows: IFollowRepo):

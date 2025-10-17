@@ -1,5 +1,5 @@
-
 from app.domain.repositories import IPostRepo, IStoryRepo
+
 
 class ContentUseCase:
     def __init__(self, posts: IPostRepo, stories: IStoryRepo):
