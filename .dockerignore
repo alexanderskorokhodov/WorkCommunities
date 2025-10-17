@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite
+*.db
+
+# VCS
+.git
+.gitignore
+
+# Envs
+.env
+.env.*
+
+# OS
+.DS_Store
+
+# Node/Junk
+node_modules
+dist
+build

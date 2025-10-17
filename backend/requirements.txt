@@ -3,3 +3,5 @@ uvicorn
 sqlalchemy
 jwt
 passlib
+pydantic-settings
+asyncpg

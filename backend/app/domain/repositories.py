@@ -1,6 +1,6 @@
 from typing import Protocol, Sequence, Optional
 
-from app.domain.entities import User, Profile, Company, Community, Membership, Post, Story, Event, Follow, OTP
+from app.domain.entities import User, Profile, Company, Community, Membership, Post, Story, Event, Follow, OTP, Media
 
 
 class IUserRepo(Protocol):
@@ -81,3 +81,13 @@ class IEventRepo(Protocol):
 
 class ICompanyRepo(Protocol):
     async def get_companies_for_user(self, user_id: str) -> Sequence[Company]: ...
+
+
+class IMediaRepo(Protocol):
+    async def create(self, *, uid: str, kind: str, mime: str, ext: str | None, size: int, url: str) -> Media: ...
+
+    async def get(self, media_id: str) -> Optional[Media]: ...
+
+    async def list_for_post(self, post_id: str) -> Sequence[Media]: ...
+
+    async def attach_to_post(self, post_id: str, media_ids: list[str]) -> None: ...

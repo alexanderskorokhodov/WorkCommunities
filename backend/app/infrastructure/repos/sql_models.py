@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import String, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import String, Boolean, DateTime, ForeignKey, Text, Integer, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -99,3 +99,34 @@ class OTPModel(Base):
     code: Mapped[str] = mapped_column(String)
     expires_at: Mapped[datetime] = mapped_column(DateTime)
     consumed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class MediaModel(Base):
+    __tablename__ = "media"
+    id: Mapped[str] = mapped_column(String, primary_key=True)  # uid генерим сами
+    kind: Mapped[str] = mapped_column(String, index=True)  # image | video | other
+    mime: Mapped[str] = mapped_column(String)
+    ext: Mapped[str | None] = mapped_column(String, nullable=True)
+    size: Mapped[int] = mapped_column(Integer)
+    url: Mapped[str] = mapped_column(String)  # /media/{id}
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class PostMediaModel(Base):
+    __tablename__ = "post_media"
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)
+    post_id: Mapped[str] = mapped_column(ForeignKey("posts.id"), index=True)
+    media_id: Mapped[str] = mapped_column(ForeignKey("media.id"), index=True)
+    order_index: Mapped[int] = mapped_column(Integer, default=0)
+    __table_args__ = (UniqueConstraint("post_id", "media_id", name="uq_post_media"),)
+    company_id: Mapped[str] = mapped_column(ForeignKey("company.id"), index=True)
+
+
+class StoryModel(Base):
+    __tablename__ = "stories"
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)
+    company_id: Mapped[str] = mapped_column(ForeignKey("company.id"), index=True)
+    title: Mapped[str] = mapped_column(String)
+    media_url: Mapped[str] = mapped_column(String)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    media_id: Mapped[str | None] = mapped_column(ForeignKey("media.id"), index=True)  # NEW

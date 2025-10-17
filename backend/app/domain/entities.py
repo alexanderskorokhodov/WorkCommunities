@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 from typing import Optional
 
 
@@ -89,3 +90,19 @@ class OTP:
     code: str
     expires_at: datetime
     consumed: bool
+
+
+class MediaType(str, Enum):
+    image = "image"
+    video = "video"
+    other = "other"
+
+@dataclass
+class Media:
+    id: str            # uid
+    kind: MediaType
+    mime: str
+    ext: str | None
+    size: int
+    url: str           # публичная ссылка /media/{id}
+    created_at: datetime
