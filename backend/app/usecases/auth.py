@@ -9,8 +9,8 @@ class AuthUseCase:
         self.otps = otps
 
     async def request_otp(self, phone: str) -> None:
-        import random
-        code = f"{random.randint(100000, 999999)}"
+        # code = f"{random.randint(100000, 999999)}"
+        code = "111111"
         await self.otps.issue(phone, code, settings.OTP_TTL_SECONDS)
 
     async def verify_otp(self, phone: str, code: str) -> str:

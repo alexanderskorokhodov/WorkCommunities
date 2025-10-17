@@ -74,15 +74,6 @@ class PostModel(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
-class StoryModel(Base):
-    __tablename__ = "stories"
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)
-    community_id: Mapped[str] = mapped_column(ForeignKey("communities.id"), index=True)
-    title: Mapped[str] = mapped_column(String)
-    media_url: Mapped[str] = mapped_column(String)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-
-
 class EventModel(Base):
     __tablename__ = "events"
     id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)
@@ -99,6 +90,9 @@ class OTPModel(Base):
     code: Mapped[str] = mapped_column(String)
     expires_at: Mapped[datetime] = mapped_column(DateTime)
     consumed: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    def __str__(self):
+        return f'Id: {self.phone}, Code: {self.code}, Expires: {self.expires_at}, Consumed: {self.consumed}'
 
 
 class MediaModel(Base):
@@ -119,13 +113,13 @@ class PostMediaModel(Base):
     media_id: Mapped[str] = mapped_column(ForeignKey("media.id"), index=True)
     order_index: Mapped[int] = mapped_column(Integer, default=0)
     __table_args__ = (UniqueConstraint("post_id", "media_id", name="uq_post_media"),)
-    company_id: Mapped[str] = mapped_column(ForeignKey("company.id"), index=True)
+    company_id: Mapped[str] = mapped_column(ForeignKey("companies.id"), index=True)
 
 
 class StoryModel(Base):
     __tablename__ = "stories"
     id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)
-    company_id: Mapped[str] = mapped_column(ForeignKey("company.id"), index=True)
+    company_id: Mapped[str] = mapped_column(ForeignKey("companies.id"), index=True)
     title: Mapped[str] = mapped_column(String)
     media_url: Mapped[str] = mapped_column(String)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)

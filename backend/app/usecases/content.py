@@ -29,17 +29,17 @@ class ContentUseCase:
         media = await self.media.list_for_post(post_id)
         return post, media
 
-    async def create_story(self, *, community_id: str, title: str, media_uid: str):
+    async def create_story(self, *, company_id: str, title: str, media_uid: str):
         m = await self.media.get(media_uid)
         if not m: raise ValueError("Media not found")
-        story = await self.stories.create(community_id=community_id, title=title, media_url=m.url, media_id=m.id)
+        story = await self.stories.create(company_id=company_id, title=title, media_url=m.url, media_id=m.id)
         return story
 
     async def get_story_full(self, story_id: str):
         story = await self.stories.get(story_id)
         m = None
-        if getattr(story, "media_id", None):
-            m = await self.media.get(story.media_id)
+        if getattr(story, "media_url", None):
+            m = await self.media.get(story.media_url)
         return story, m
 
     async def get_post(self, post_id: str):
