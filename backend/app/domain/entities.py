@@ -68,7 +68,7 @@ class Post:
 @dataclass
 class Story:
     id: str
-    community_id: str
+    company_id: str
     title: str
     media_url: str
     created_at: datetime
@@ -97,12 +97,13 @@ class MediaType(str, Enum):
     video = "video"
     other = "other"
 
+
 @dataclass
 class Media:
-    id: str            # uid
+    id: str  # uid
     kind: MediaType
     mime: str
     ext: str | None
     size: int
-    url: str           # публичная ссылка /media/{id}
+    url: str  # публичная ссылка /media/{id}
     created_at: datetime

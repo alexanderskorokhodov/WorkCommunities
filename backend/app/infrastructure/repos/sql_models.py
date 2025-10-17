@@ -113,7 +113,6 @@ class PostMediaModel(Base):
     media_id: Mapped[str] = mapped_column(ForeignKey("media.id"), index=True)
     order_index: Mapped[int] = mapped_column(Integer, default=0)
     __table_args__ = (UniqueConstraint("post_id", "media_id", name="uq_post_media"),)
-    company_id: Mapped[str] = mapped_column(ForeignKey("companies.id"), index=True)
 
 
 class StoryModel(Base):

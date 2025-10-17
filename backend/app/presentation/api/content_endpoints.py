@@ -1,11 +1,11 @@
-from app.infrastructure.repos.post_repo import PostRepo  # реализуй как прежде
-from app.infrastructure.repos.story_repo import StoryRepo  # реализуй как прежде
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.db import get_session
 from app.core.deps import get_current_user
 from app.infrastructure.repos.media_repo import MediaRepo
+from app.infrastructure.repos.post_repo import PostRepo  # реализуй как прежде
+from app.infrastructure.repos.story_repo import StoryRepo  # реализуй как прежде
 from app.presentation.schemas.content import PostCreateIn, PostUpdateIn, PostOut, StoryCreateIn, StoryOut, MediaOut
 from app.usecases.content import ContentUseCase
 
@@ -68,7 +68,7 @@ async def create_story(data: StoryCreateIn, session: AsyncSession = Depends(get_
                        user=Depends(get_current_user)):
     uc = ContentUseCase(posts=PostRepo(session), stories=StoryRepo(session), media=MediaRepo(session))
     try:
-        story = await uc.create_story(community_id=data.community_id, title=data.title, media_uid=data.media_uid)
+        story = await uc.create_story(company_id=data.company_id, title=data.title, media_uid=data.media_uid)
     except ValueError:
         raise HTTPException(400, "Media not found")
     m = await MediaRepo(session).get(story.media_id) if getattr(story, "media_id", None) else None
