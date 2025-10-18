@@ -95,6 +95,9 @@ Auth and roles
   - Adds missing column `communities.logo_media_id` to keep old DBs compatible after adding community logo feature.
   - Idempotent: safe to run multiple times.
   - Run: `docker compose exec api python -m app.scripts.migrate_add_community_logo`
+- `app/scripts/set_default_logos.py`
+  - Sets `logo_media_id` for all companies and communities. By default affects only rows where it is NULL; use `--force` to overwrite.
+  - Run: `docker compose exec api python -m app.scripts.set_default_logos --logo-id e0bee682aa83422db1463cfbcb4acd73`
 
 Recommended flow in dev:
 1) Clear DB (destructive). 2) Seed reference data. 3) Generate mock data.
