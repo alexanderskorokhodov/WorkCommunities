@@ -18,6 +18,24 @@ def _media_to_out(m) -> MediaOut:
                     size=m.size, url=m.url)
 
 
+@router.get("/posts", response_model=list[PostOut])
+async def list_posts(offset: int = 0, limit: int = 20, session: AsyncSession = Depends(get_session)):
+    repo = PostRepo(session)
+    posts = await repo.list_all(offset=offset, limit=limit)
+    media_repo = MediaRepo(session)
+    result: list[PostOut] = []
+    for p in posts:
+        media = await media_repo.list_for_post(p.id)
+        result.append(PostOut(
+            id=p.id,
+            community_id=p.community_id,
+            title=p.title,
+            body=p.body,
+            media=[_media_to_out(m) for m in media],
+        ))
+    return result
+
+
 @router.post("/posts", response_model=PostOut)
 async def create_post(data: PostCreateIn, session: AsyncSession = Depends(get_session), user=Depends(role_required("company"))):
     uc = ContentUseCase(posts=PostRepo(session), stories=StoryRepo(session), media=MediaRepo(session))
