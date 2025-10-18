@@ -227,17 +227,10 @@ async def seed_companies_and_communities(session, media_map: Dict[str, str]) -> 
         c1 = await company_repo.update(c1.id, logo_media_id=media_map["logo1.png"])
     _log(f"Created company: id={c1.id}, name={c1.name}, phone={c1.phone}, logo_media_id={c1.logo_media_id}")
 
-    # Assign tags for АО «Микрон» by skill IDs: Биотех + Хим. инженерия
-    res_sk = await session.execute(select(SkillModel))
-    skills = {s.title: s.id for s in res_sk.scalars().all()}
-    tag_ids = []
-    for t in ["Биотех", "Хим. инженерия"]:
-        sid = skills.get(t)
-        if sid:
-            tag_ids.append(sid)
-    if tag_ids:
-        c1 = await company_repo.update(c1.id, tags=tag_ids)
-        _log(f"Updated company tags for {c1.name}: {c1.tags}")
+    # Assign explicit skill tags (UIDs) for companies as requested
+    # АО «Микрон» — one skill UID
+    c1 = await company_repo.update(c1.id, tags=["a49b99be090c412b8b4486e70879e3c7"])  # Инженерия
+    _log(f"Updated company tags for {c1.name}: {c1.tags}")
 
     comm1 = await community_repo.create(
         name="ИИ и встраиваемые системы",
@@ -264,6 +257,9 @@ async def seed_companies_and_communities(session, media_map: Dict[str, str]) -> 
     if "logo2.png" in media_map:
         c2 = await company_repo.update(c2.id, logo_media_id=media_map["logo2.png"])
     _log(f"Created company: id={c2.id}, name={c2.name}, phone={c2.phone}, logo_media_id={c2.logo_media_id}")
+    # R-Pharm — two skill UIDs
+    c2 = await company_repo.update(c2.id, tags=["9f321dbcfe7443ebbd215692fea36696", "e562598e6a5c4885a3f02421c02152e5"])  # Биотех + Хим. инженерия
+    _log(f"Updated company tags for {c2.name}: {c2.tags}")
 
     comm2 = await community_repo.create(
         name="Химическая инженерия",

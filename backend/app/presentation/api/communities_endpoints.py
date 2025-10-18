@@ -19,7 +19,7 @@ from app.presentation.schemas.communities import (
     CommunityDetailOut,
 )
 from app.presentation.schemas.cases import CaseOut, CaseCreateIn
-from app.presentation.schemas.content import PostOut, MediaOut
+from app.presentation.schemas.content import PostOut, MediaOut, SkillOut, ContentSphereOut
 from app.usecases.communities import CommunityUseCase
 from app.infrastructure.repos.membership_repo import MembershipRepo
 from app.infrastructure.repos.user_repo import UserRepo
@@ -263,6 +263,21 @@ async def list_community_posts(
     result: list[PostOut] = []
     for p in posts:
         media = await media_repo.list_for_content(p.id)
+        # load skills with sphere colors
+        skills = await PostRepo(session).list_skills_for_post(p.id)
+        def _skill_to_out(s) -> SkillOut:
+            sp = getattr(s, "sphere", None)
+            return SkillOut(
+                id=s.id,
+                title=s.title,
+                sphere_id=s.sphere_id,
+                sphere=(ContentSphereOut(
+                    id=sp.id,
+                    title=sp.title,
+                    background_color=sp.background_color,
+                    text_color=sp.text_color,
+                ) if sp else None),
+            )
         result.append(PostOut(
             id=p.id,
             community_id=p.community_id,
@@ -270,7 +285,7 @@ async def list_community_posts(
             body=p.body,
             media=[_media_to_out(m) for m in media],
             tags=p.tags,
-            skills=[],
+            skills=[_skill_to_out(s) for s in skills],
             cost=p.cost,
             participant_payout=p.participant_payout,
         ))

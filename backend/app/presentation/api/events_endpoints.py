@@ -4,7 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.adapters.db import get_session
 from app.core.deps import get_current_user, role_required
 from app.infrastructure.repos.event_repo import EventRepo
+from app.infrastructure.repos.post_repo import PostRepo
 from app.presentation.schemas.events import EventOut, EventCreateIn
+from app.presentation.schemas.content import SkillOut, ContentSphereOut
 from app.usecases.events import EventsUseCase
 
 router = APIRouter()
@@ -15,6 +17,23 @@ async def list_upcoming(limit: int = 20, session: AsyncSession = Depends(get_ses
     """Public: list all upcoming events across communities."""
     uc = EventsUseCase(events=EventRepo(session))
     events = await uc.upcoming_all(limit=limit)
+    async def _skill_outs(content_id: str) -> list[SkillOut]:
+        skills = await PostRepo(session).list_skills_for_post(content_id)
+        out: list[SkillOut] = []
+        for s in skills:
+            sp = getattr(s, "sphere", None)
+            out.append(SkillOut(
+                id=s.id,
+                title=s.title,
+                sphere_id=s.sphere_id,
+                sphere=(ContentSphereOut(
+                    id=sp.id,
+                    title=sp.title,
+                    background_color=sp.background_color,
+                    text_color=sp.text_color,
+                ) if sp else None),
+            ))
+        return out
     return [
         EventOut(
             id=e.id,
@@ -28,7 +47,7 @@ async def list_upcoming(limit: int = 20, session: AsyncSession = Depends(get_ses
             format=e.format,
             media_id=e.media_id,
             tags=e.tags,
-            # skills are not eagerly loaded here; keeping empty list by default
+            skills=await _skill_outs(e.id),
             cost=e.cost,
             participant_payout=e.participant_payout,
         )
@@ -40,6 +59,23 @@ async def list_upcoming(limit: int = 20, session: AsyncSession = Depends(get_ses
 async def list_my_upcoming(limit: int = 20, session: AsyncSession = Depends(get_session), user=Depends(get_current_user)):
     uc = EventsUseCase(events=EventRepo(session))
     events = await uc.my_upcoming(user.id, limit=limit)
+    async def _skill_outs(content_id: str) -> list[SkillOut]:
+        skills = await PostRepo(session).list_skills_for_post(content_id)
+        out: list[SkillOut] = []
+        for s in skills:
+            sp = getattr(s, "sphere", None)
+            out.append(SkillOut(
+                id=s.id,
+                title=s.title,
+                sphere_id=s.sphere_id,
+                sphere=(ContentSphereOut(
+                    id=sp.id,
+                    title=sp.title,
+                    background_color=sp.background_color,
+                    text_color=sp.text_color,
+                ) if sp else None),
+            ))
+        return out
     return [
         EventOut(
             id=e.id,
@@ -53,6 +89,7 @@ async def list_my_upcoming(limit: int = 20, session: AsyncSession = Depends(get_
             format=e.format,
             media_id=e.media_id,
             tags=e.tags,
+            skills=await _skill_outs(e.id),
             cost=e.cost,
             participant_payout=e.participant_payout,
         )
@@ -79,6 +116,22 @@ async def create_event(data: EventCreateIn, session: AsyncSession = Depends(get_
         cost=data.cost,
         participant_payout=data.participant_payout,
     )
+    # return with skills hydrated as well
+    skills = await PostRepo(session).list_skills_for_post(e.id)
+    out_skills: list[SkillOut] = []
+    for s in skills:
+        sp = getattr(s, "sphere", None)
+        out_skills.append(SkillOut(
+            id=s.id,
+            title=s.title,
+            sphere_id=s.sphere_id,
+            sphere=(ContentSphereOut(
+                id=sp.id,
+                title=sp.title,
+                background_color=sp.background_color,
+                text_color=sp.text_color,
+            ) if sp else None),
+        ))
     return EventOut(
         id=e.id,
         community_id=e.community_id,
@@ -91,6 +144,7 @@ async def create_event(data: EventCreateIn, session: AsyncSession = Depends(get_
         format=e.format,
         media_id=e.media_id,
         tags=e.tags,
+        skills=out_skills,
         cost=e.cost,
         participant_payout=e.participant_payout,
     )
