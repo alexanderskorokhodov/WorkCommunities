@@ -1,4 +1,4 @@
-# WorkCommunities Backend
+# WorkCommunities
 
 Бэкенд сервиса сообществ и компаний для публикаций, историй и событий. Основан на FastAPI, асинхронном SQLAlchemy и разделённой на слои архитектуре (domain → usecases → infrastructure → presentation).
 
