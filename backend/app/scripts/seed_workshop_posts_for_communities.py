@@ -21,7 +21,7 @@ from datetime import datetime
 from sqlalchemy import select
 
 from app.adapters.db import async_session, engine
-from app.infrastructure.repos.sql_models import Base, CommunityModel, PostModel, PostMediaModel, MediaModel
+from app.infrastructure.repos.sql_models import Base, CommunityModel, ContentModel, ContentMediaModel, MediaModel
 
 
 WORKSHOP_TITLE = "Онлайн-воркшоп от R-Farm с Василием Игнатьевым"
@@ -65,13 +65,16 @@ async def seed_workshop_posts():
         res = await session.execute(select(CommunityModel))
         communities = res.scalars().all()
         for c in communities:
-            res_posts = await session.execute(select(PostModel).where(PostModel.community_id == c.id))
+            res_posts = await session.execute(
+                select(ContentModel).where(ContentModel.community_id == c.id, ContentModel.type == "post")
+            )
             has_post = res_posts.first() is not None
             if has_post:
                 continue
 
-            p = PostModel(
+            p = ContentModel(
                 community_id=c.id,
+                type="post",
                 title=WORKSHOP_TITLE,
                 body=WORKSHOP_BODY,
                 created_at=datetime.utcnow(),
@@ -79,7 +82,7 @@ async def seed_workshop_posts():
             session.add(p)
             await session.flush()
 
-            pm = PostMediaModel(post_id=p.id, media_id=media.id, order_index=0)
+            pm = ContentMediaModel(content_id=p.id, media_id=media.id, order_index=0)
             session.add(pm)
 
             created += 1
@@ -95,4 +98,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-

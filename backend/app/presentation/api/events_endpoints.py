@@ -19,13 +19,17 @@ async def list_upcoming(limit: int = 20, session: AsyncSession = Depends(get_ses
             id=e.id,
             community_id=e.community_id,
             title=e.title,
-            starts_at=e.starts_at,
+            event_date=e.event_date,
             city=e.city,
             location=e.location,
             description=e.description,
             registration=e.registration,
             format=e.format,
             media_id=e.media_id,
+            tags=e.tags,
+            # skills are not eagerly loaded here; keeping empty list by default
+            cost=e.cost,
+            participant_payout=e.participant_payout,
         )
         for e in events
     ]
@@ -40,13 +44,16 @@ async def list_my_upcoming(limit: int = 20, session: AsyncSession = Depends(get_
             id=e.id,
             community_id=e.community_id,
             title=e.title,
-            starts_at=e.starts_at,
+            event_date=e.event_date,
             city=e.city,
             location=e.location,
             description=e.description,
             registration=e.registration,
             format=e.format,
             media_id=e.media_id,
+            tags=e.tags,
+            cost=e.cost,
+            participant_payout=e.participant_payout,
         )
         for e in events
     ]
@@ -59,25 +66,32 @@ async def create_event(data: EventCreateIn, session: AsyncSession = Depends(get_
     e = await uc.create(
         community_id=data.community_id,
         title=data.title,
-        starts_at=data.starts_at,
+        event_date=data.event_date,
         city=data.city,
         location=data.location,
         description=data.description,
         registration=data.registration,
         format=data.format,
         media_id=data.media_id,
+        tags=data.tags,
+        skill_ids=data.skill_ids,
+        cost=data.cost,
+        participant_payout=data.participant_payout,
     )
     return EventOut(
         id=e.id,
         community_id=e.community_id,
         title=e.title,
-        starts_at=e.starts_at,
+        event_date=e.event_date,
         city=e.city,
         location=e.location,
         description=e.description,
         registration=e.registration,
         format=e.format,
         media_id=e.media_id,
+        tags=e.tags,
+        cost=e.cost,
+        participant_payout=e.participant_payout,
     )
 
 

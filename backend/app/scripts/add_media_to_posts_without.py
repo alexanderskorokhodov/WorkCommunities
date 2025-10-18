@@ -29,8 +29,8 @@ from sqlalchemy import select
 from app.adapters.db import async_session, engine
 from app.infrastructure.repos.sql_models import (
     Base,
-    PostModel,
-    PostMediaModel,
+    ContentModel,
+    ContentMediaModel,
     MediaModel,
 )
 
@@ -65,19 +65,20 @@ async def ensure_media(media_id: str) -> MediaModel:
 
 
 async def attach_media_to_posts_without(media_id: str) -> int:
-    """Attach media to all posts that have no media yet. Returns count of posts updated."""
+    """Attach media to all posts (content type='post') that have no media yet. Returns count updated."""
     updated = 0
     async with async_session() as session:
         # Find posts with no related post_media rows using OUTER JOIN
         res = await session.execute(
-            select(PostModel.id)
-            .outerjoin(PostMediaModel, PostMediaModel.post_id == PostModel.id)
-            .where(PostMediaModel.id.is_(None))
+            select(ContentModel.id)
+            .where(ContentModel.type == "post")
+            .outerjoin(ContentMediaModel, ContentMediaModel.content_id == ContentModel.id)
+            .where(ContentMediaModel.id.is_(None))
         )
         post_ids = [row[0] for row in res.all()]
 
         for pid in post_ids:
-            pm = PostMediaModel(post_id=pid, media_id=media_id, order_index=0)
+            pm = ContentMediaModel(content_id=pid, media_id=media_id, order_index=0)
             session.add(pm)
             updated += 1
 
@@ -96,23 +97,24 @@ def _str2bool(v) -> bool:
 
 
 async def attach_media_to_all_missing_specific(media_id: str) -> int:
-    """Attach media to all posts that do NOT already have this specific media id.
+    """Attach media to all posts (content type='post') that do NOT already have this specific media id.
     Posts that already have it are skipped. Returns count of posts updated.
     """
     updated = 0
     async with async_session() as session:
         res = await session.execute(
-            select(PostModel.id)
+            select(ContentModel.id)
+            .where(ContentModel.type == "post")
             .outerjoin(
-                PostMediaModel,
-                (PostMediaModel.post_id == PostModel.id) & (PostMediaModel.media_id == media_id),
+                ContentMediaModel,
+                (ContentMediaModel.content_id == ContentModel.id) & (ContentMediaModel.media_id == media_id),
             )
-            .where(PostMediaModel.id.is_(None))
+            .where(ContentMediaModel.id.is_(None))
         )
         post_ids = [row[0] for row in res.all()]
 
         for pid in post_ids:
-            pm = PostMediaModel(post_id=pid, media_id=media_id, order_index=0)
+            pm = ContentMediaModel(content_id=pid, media_id=media_id, order_index=0)
             session.add(pm)
             updated += 1
 

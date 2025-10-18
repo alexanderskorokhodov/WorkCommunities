@@ -12,17 +12,31 @@ class MediaOut(BaseModel):
     url: str
 
 
+class SkillOut(BaseModel):
+    id: str
+    title: str
+    sphere_id: str
+
+
 class PostCreateIn(BaseModel):
     community_id: str
     title: str
     body: str
     media_uids: List[str] = []  # NEW — список uid медиа
+    tags: Optional[List[str]] = None
+    skill_ids: Optional[List[str]] = None
+    cost: Optional[int] = None
+    participant_payout: Optional[int] = None
 
 
 class PostUpdateIn(BaseModel):
     title: Optional[str] = None
     body: Optional[str] = None
     media_uids: Optional[List[str]] = None  # NEW — можно заменить медиа
+    tags: Optional[List[str]] = None
+    skill_ids: Optional[List[str]] = None
+    cost: Optional[int] = None
+    participant_payout: Optional[int] = None
 
 
 class PostOut(BaseModel):
@@ -31,6 +45,10 @@ class PostOut(BaseModel):
     title: str
     body: str
     media: List[MediaOut] = []  # NEW
+    tags: List[str] = []
+    skills: List[SkillOut] = []
+    cost: Optional[int] = None
+    participant_payout: Optional[int] = None
 
 
 class StoryCreateIn(BaseModel):

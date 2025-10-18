@@ -80,35 +80,34 @@ class CompanyFollowModel(Base):
     company_id: Mapped[str] = mapped_column(ForeignKey("companies.id"), index=True)
 
 
-class PostModel(Base):
-    __tablename__ = "posts"
+class ContentModel(Base):
+    __tablename__ = "content"
     id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)
     community_id: Mapped[str] = mapped_column(ForeignKey("communities.id"), index=True)
+    type: Mapped[str] = mapped_column(String, index=True)  # 'post' | 'event'
     title: Mapped[str] = mapped_column(String)
-    body: Mapped[str] = mapped_column(Text)
+    body: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-
-
-class EventModel(Base):
-    __tablename__ = "events"
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)
-    community_id: Mapped[str] = mapped_column(ForeignKey("communities.id"), index=True)
-    title: Mapped[str] = mapped_column(String)
-    starts_at: Mapped[datetime] = mapped_column(DateTime)
+    # Event-specific fields (optional)
+    event_date: Mapped[datetime | None] = mapped_column(DateTime)
     city: Mapped[str | None] = mapped_column(String)
     location: Mapped[str | None] = mapped_column(String)
     description: Mapped[str | None] = mapped_column(Text)
     registration: Mapped[str | None] = mapped_column(String)
     format: Mapped[str | None] = mapped_column(String)
     media_id: Mapped[str | None] = mapped_column(ForeignKey("media.id"), index=True)
+    # Unified optional fields
+    tags: Mapped[str | None] = mapped_column(Text)  # comma-separated
+    cost: Mapped[int | None] = mapped_column(Integer)
+    participant_payout: Mapped[int | None] = mapped_column(Integer)
 
 
 class EventParticipantModel(Base):
     __tablename__ = "event_participants"
     id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
-    event_id: Mapped[str] = mapped_column(ForeignKey("events.id"), index=True)
-    __table_args__ = (UniqueConstraint("user_id", "event_id", name="uq_event_participant"),)
+    content_id: Mapped[str] = mapped_column(ForeignKey("content.id"), index=True)
+    __table_args__ = (UniqueConstraint("user_id", "content_id", name="uq_event_participant"),)
 
 
 class OTPModel(Base):
@@ -134,13 +133,13 @@ class MediaModel(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
-class PostMediaModel(Base):
-    __tablename__ = "post_media"
+class ContentMediaModel(Base):
+    __tablename__ = "content_media"
     id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)
-    post_id: Mapped[str] = mapped_column(ForeignKey("posts.id"), index=True)
+    content_id: Mapped[str] = mapped_column(ForeignKey("content.id"), index=True)
     media_id: Mapped[str] = mapped_column(ForeignKey("media.id"), index=True)
     order_index: Mapped[int] = mapped_column(Integer, default=0)
-    __table_args__ = (UniqueConstraint("post_id", "media_id", name="uq_post_media"),)
+    __table_args__ = (UniqueConstraint("content_id", "media_id", name="uq_content_media"),)
 
 
 class StoryModel(Base):
@@ -167,6 +166,14 @@ class SkillModel(Base):
     id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)  # uid
     title: Mapped[str] = mapped_column(String)
     sphere_id: Mapped[str] = mapped_column(ForeignKey("spheres.id"), index=True)
+
+
+class ContentSkillModel(Base):
+    __tablename__ = "content_skills"
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)
+    content_id: Mapped[str] = mapped_column(ForeignKey("content.id"), index=True)
+    skill_id: Mapped[str] = mapped_column(ForeignKey("skills.id"), index=True)
+    __table_args__ = (UniqueConstraint("content_id", "skill_id", name="uq_content_skill"),)
 
 
 class StatusModel(Base):

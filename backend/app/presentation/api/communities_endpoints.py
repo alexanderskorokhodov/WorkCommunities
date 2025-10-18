@@ -247,13 +247,17 @@ async def list_community_posts(
 
     result: list[PostOut] = []
     for p in posts:
-        media = await media_repo.list_for_post(p.id)
+        media = await media_repo.list_for_content(p.id)
         result.append(PostOut(
             id=p.id,
             community_id=p.community_id,
             title=p.title,
             body=p.body,
             media=[_media_to_out(m) for m in media],
+            tags=p.tags,
+            skills=[],
+            cost=p.cost,
+            participant_payout=p.participant_payout,
         ))
     return result
 

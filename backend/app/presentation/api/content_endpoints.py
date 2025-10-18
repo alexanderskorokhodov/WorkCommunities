@@ -7,7 +7,7 @@ from app.infrastructure.repos.media_repo import MediaRepo
 from app.infrastructure.repos.post_repo import PostRepo  # реализуй как прежде
 from app.infrastructure.repos.story_repo import StoryRepo  # реализуй как прежде
 from app.infrastructure.repos.company_follow_repo import CompanyFollowRepo
-from app.presentation.schemas.content import PostCreateIn, PostUpdateIn, PostOut, StoryCreateIn, StoryOut, MediaOut
+from app.presentation.schemas.content import PostCreateIn, PostUpdateIn, PostOut, StoryCreateIn, StoryOut, MediaOut, SkillOut
 from app.usecases.content import ContentUseCase
 
 router = APIRouter()
@@ -25,13 +25,19 @@ async def list_posts(offset: int = 0, limit: int = 20, session: AsyncSession = D
     media_repo = MediaRepo(session)
     result: list[PostOut] = []
     for p in posts:
-        media = await media_repo.list_for_post(p.id)
+        media = await media_repo.list_for_content(p.id)
+        # skills (optional)
+        skills = await PostRepo(session).list_skills_for_post(p.id)
         result.append(PostOut(
             id=p.id,
             community_id=p.community_id,
             title=p.title,
             body=p.body,
             media=[_media_to_out(m) for m in media],
+            tags=p.tags,
+            skills=[SkillOut(id=s.id, title=s.title, sphere_id=s.sphere_id) for s in skills],
+            cost=p.cost,
+            participant_payout=p.participant_payout,
         ))
     return result
 
@@ -44,13 +50,22 @@ async def create_post(data: PostCreateIn, session: AsyncSession = Depends(get_se
         title=data.title,
         body=data.body,
         media_uids=data.media_uids or [],
+        tags=data.tags,
+        skill_ids=data.skill_ids,
+        cost=data.cost,
+        participant_payout=data.participant_payout,
     )
     # собрать media
-    media = await MediaRepo(session).list_for_post(post.id)
+    media = await MediaRepo(session).list_for_content(post.id)
+    skills = await PostRepo(session).list_skills_for_post(post.id)
     return PostOut(
         id=post.id, community_id=post.community_id,
         title=post.title, body=post.body,
-        media=[_media_to_out(m) for m in media]
+        media=[_media_to_out(m) for m in media],
+        tags=post.tags,
+        skills=[SkillOut(id=s.id, title=s.title, sphere_id=s.sphere_id) for s in skills],
+        cost=post.cost,
+        participant_payout=post.participant_payout,
     )
 
 
@@ -59,11 +74,16 @@ async def update_post(post_id: str, data: PostUpdateIn, session: AsyncSession = 
                       user=Depends(role_required("company"))):
     uc = ContentUseCase(posts=PostRepo(session), stories=StoryRepo(session), media=MediaRepo(session))
     post = await uc.update_post(post_id, **data.model_dump(exclude_unset=True))
-    media = await MediaRepo(session).list_for_post(post.id)
+    media = await MediaRepo(session).list_for_content(post.id)
+    skills = await PostRepo(session).list_skills_for_post(post.id)
     return PostOut(
         id=post.id, community_id=post.community_id,
         title=post.title, body=post.body,
-        media=[_media_to_out(m) for m in media]
+        media=[_media_to_out(m) for m in media],
+        tags=post.tags,
+        skills=[SkillOut(id=s.id, title=s.title, sphere_id=s.sphere_id) for s in skills],
+        cost=post.cost,
+        participant_payout=post.participant_payout,
     )
 
 
@@ -73,10 +93,15 @@ async def get_post(post_id: str, session: AsyncSession = Depends(get_session)):
     post, media = await uc.get_post_full(post_id)
     if not post:
         raise HTTPException(404, "Not found")
+    skills = await PostRepo(session).list_skills_for_post(post.id)
     return PostOut(
         id=post.id, community_id=post.community_id,
         title=post.title, body=post.body,
-        media=[_media_to_out(m) for m in media]
+        media=[_media_to_out(m) for m in media],
+        tags=post.tags,
+        skills=[SkillOut(id=s.id, title=s.title, sphere_id=s.sphere_id) for s in skills],
+        cost=post.cost,
+        participant_payout=post.participant_payout,
     )
 
 
@@ -109,11 +134,16 @@ async def list_user_featured_posts(user_id: str, limit: int = 20, session: Async
     posts = await uc.featured_posts_for_user(user_id=user_id, limit=limit)
     out: list[PostOut] = []
     for p in posts:
-        media = await MediaRepo(session).list_for_post(p.id)
+        media = await MediaRepo(session).list_for_content(p.id)
+        skills = await PostRepo(session).list_skills_for_post(p.id)
         out.append(PostOut(
             id=p.id, community_id=p.community_id,
             title=p.title, body=p.body,
-            media=[_media_to_out(m) for m in media]
+            media=[_media_to_out(m) for m in media],
+            tags=p.tags,
+            skills=[SkillOut(id=s.id, title=s.title, sphere_id=s.sphere_id) for s in skills],
+            cost=p.cost,
+            participant_payout=p.participant_payout,
         ))
     return out
 
@@ -125,11 +155,16 @@ async def list_my_featured_posts(limit: int = 20, session: AsyncSession = Depend
     posts = await uc.featured_posts_for_user(user_id=user.id, limit=limit)
     out: list[PostOut] = []
     for p in posts:
-        media = await MediaRepo(session).list_for_post(p.id)
+        media = await MediaRepo(session).list_for_content(p.id)
+        skills = await PostRepo(session).list_skills_for_post(p.id)
         out.append(PostOut(
             id=p.id, community_id=p.community_id,
             title=p.title, body=p.body,
-            media=[_media_to_out(m) for m in media]
+            media=[_media_to_out(m) for m in media],
+            tags=p.tags,
+            skills=[SkillOut(id=s.id, title=s.title, sphere_id=s.sphere_id) for s in skills],
+            cost=p.cost,
+            participant_payout=p.participant_payout,
         ))
     return out
 
@@ -141,11 +176,16 @@ async def posts_from_followed_communities(limit: int = 20, session: AsyncSession
     posts = await uc.posts_from_followed_communities(user_id=user.id, limit=limit)
     out: list[PostOut] = []
     for p in posts:
-        media = await MediaRepo(session).list_for_post(p.id)
+        media = await MediaRepo(session).list_for_content(p.id)
+        skills = await PostRepo(session).list_skills_for_post(p.id)
         out.append(PostOut(
             id=p.id, community_id=p.community_id,
             title=p.title, body=p.body,
-            media=[_media_to_out(m) for m in media]
+            media=[_media_to_out(m) for m in media],
+            tags=p.tags,
+            skills=[SkillOut(id=s.id, title=s.title, sphere_id=s.sphere_id) for s in skills],
+            cost=p.cost,
+            participant_payout=p.participant_payout,
         ))
     return out
 

@@ -11,10 +11,9 @@ from app.infrastructure.repos.sql_models import (
     UserModel,
     CompanyModel,
     CommunityModel,
-    PostModel,
+    ContentModel,
     StoryModel,
     MediaModel,
-    EventModel,
 )
 
 
@@ -78,15 +77,16 @@ async def create_community(company_id: str, idx: int) -> CommunityModel:
         return c
 
 
-async def create_post(community_id: str, idx: int) -> PostModel:
+async def create_post(community_id: str, idx: int) -> ContentModel:
     async with async_session() as session:
         title = f"Пост {_suffix(idx)}"
         body = "\n".join([
             "Это тестовый пост для проверки интерфейса.",
             "В нём могут быть переносы строк и разная длина описаний.",
         ])
-        p = PostModel(
+        p = ContentModel(
             community_id=community_id,
+            type="post",
             title=title,
             body=body,
             created_at=datetime.utcnow(),
@@ -132,18 +132,20 @@ async def create_story(company_id: str, idx: int) -> StoryModel:
         return s
 
 
-async def create_event(community_id: str, idx: int) -> EventModel:
+async def create_event(community_id: str, idx: int) -> ContentModel:
     async with async_session() as session:
-        e = EventModel(
+        e = ContentModel(
             community_id=community_id,
+            type="event",
             title=f"Ивент {_suffix(idx)}",
-            starts_at=datetime.utcnow(),
+            event_date=datetime.utcnow(),
             city="Москва",
             location="Онлайн",
             description="Тестовый ивент с переносами\nи подробным описанием.",
             registration="https://example.com/register",
             format="online",
             media_id=None,
+            created_at=datetime.utcnow(),
         )
         session.add(e)
         await session.commit()

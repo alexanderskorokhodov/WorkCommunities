@@ -228,7 +228,7 @@ def step_create_event(ctx: Ctx, verbose: bool) -> None:
     payload = {
         "community_id": ctx.community_id,
         "title": f"Event {_rand(4)}",
-        "starts_at": starts_at,
+        "event_date": starts_at,
         "city": "Moscow",
         "location": "Online",
         "description": "Event created by e2e_company_flow",

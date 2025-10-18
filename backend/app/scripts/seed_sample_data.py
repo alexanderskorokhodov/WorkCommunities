@@ -10,10 +10,10 @@ from app.infrastructure.repos.sql_models import (
     UserModel,
     CompanyModel,
     CommunityModel,
-    PostModel,
+    ContentModel,
     StoryModel,
     MediaModel,
-    PostMediaModel,
+    ContentMediaModel,
 )
 
 
@@ -78,7 +78,7 @@ async def create_community(company_id: str, name: str, description: str | None =
 async def create_post(community_id: str, title: str, body: str,
                       media_urls: list[str] | None = None):
     async with async_session() as session:
-        p = PostModel(community_id=community_id, title=title, body=body, created_at=datetime.utcnow())
+        p = ContentModel(community_id=community_id, type="post", title=title, body=body, created_at=datetime.utcnow())
         session.add(p)
         await session.flush()
 
@@ -96,7 +96,7 @@ async def create_post(community_id: str, title: str, body: str,
                 )
                 session.add(m)
                 await session.flush()
-                pm = PostMediaModel(post_id=p.id, media_id=m.id, order_index=i)
+                pm = ContentMediaModel(content_id=p.id, media_id=m.id, order_index=i)
                 session.add(pm)
 
         await session.commit()

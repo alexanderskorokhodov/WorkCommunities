@@ -97,6 +97,11 @@ class Post:
     title: str
     body: str
     created_at: datetime
+    # unified content extensions
+    tags: list[str] = field(default_factory=list)
+    skills: list["Skill"] = field(default_factory=list)
+    cost: Optional[int] = None
+    participant_payout: Optional[int] = None
 
 
 @dataclass
@@ -113,13 +118,18 @@ class Event:
     id: str
     community_id: str
     title: str
-    starts_at: datetime
+    event_date: datetime
     city: str | None
     location: str | None = None
     description: str | None = None
     registration: str | None = None
     format: str | None = None
     media_id: str | None = None
+    # unified content extensions
+    tags: list[str] = field(default_factory=list)
+    skills: list["Skill"] = field(default_factory=list)
+    cost: Optional[int] = None
+    participant_payout: Optional[int] = None
 
 
 @dataclass

@@ -9,10 +9,21 @@ class ContentUseCase:
         self.company_follows = company_follows
 
     async def create_post(self, *, community_id: str, title: str, body: str,
-                          media_uids: list[str]):
-        post = await self.posts.create(community_id=community_id, title=title, body=body)
+                          media_uids: list[str], tags: list[str] | None = None,
+                          skill_ids: list[str] | None = None,
+                          cost: int | None = None,
+                          participant_payout: int | None = None):
+        post = await self.posts.create(
+            community_id=community_id,
+            title=title,
+            body=body,
+            tags=tags,
+            skill_ids=skill_ids,
+            cost=cost,
+            participant_payout=participant_payout,
+        )
         if media_uids:
-            await self.media.attach_to_post(post.id, media_uids)
+            await self.media.attach_to_content(post.id, media_uids)
         return post
 
     async def update_post(self, post_id: str, **data):
@@ -21,12 +32,12 @@ class ContentUseCase:
         if media_uids is not None:
             # простая стратегия: удалить связи и записать заново (или сделать upsert)
             # тут можно реализовать repo.reset_post_media(...)
-            await self.media.attach_to_post(post_id, media_uids)
+            await self.media.attach_to_content(post_id, media_uids)
         return post
 
     async def get_post_full(self, post_id: str):
         post = await self.posts.get(post_id)
-        media = await self.media.list_for_post(post_id)
+        media = await self.media.list_for_content(post_id)
         return post, media
 
     async def create_story(self, *, company_id: str, title: str, media_uid: str):

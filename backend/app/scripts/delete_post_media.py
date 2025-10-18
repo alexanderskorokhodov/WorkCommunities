@@ -31,12 +31,12 @@ from sqlalchemy import select, func, delete, exists
 from app.adapters.db import async_session, engine
 from app.infrastructure.repos.sql_models import (
     Base,
-    PostMediaModel,
+    ContentMediaModel,
     MediaModel,
     UserModel,
     CompanyModel,
     CommunityModel,
-    EventModel,
+    ContentModel,
     StoryModel,
 )
 
@@ -48,18 +48,18 @@ async def ensure_tables() -> None:
 
 async def count_post_media() -> int:
     async with async_session() as session:
-        res = await session.execute(select(func.count()).select_from(PostMediaModel))
+        res = await session.execute(select(func.count()).select_from(ContentMediaModel))
         return int(res.scalar() or 0)
 
 
 async def delete_all_post_media() -> int:
-    """Delete all rows from post_media. Returns deleted count."""
+    """Delete all rows from content_media. Returns deleted count."""
     async with async_session() as session:
         # Count first
-        res = await session.execute(select(func.count()).select_from(PostMediaModel))
+        res = await session.execute(select(func.count()).select_from(ContentMediaModel))
         total = int(res.scalar() or 0)
         if total:
-            await session.execute(delete(PostMediaModel))
+            await session.execute(delete(ContentMediaModel))
             await session.commit()
         return total
 
@@ -69,11 +69,11 @@ async def count_orphaned_media() -> int:
         stmt = (
             select(func.count())
             .select_from(MediaModel)
-            .where(~exists(select(1).where(PostMediaModel.media_id == MediaModel.id)))
+            .where(~exists(select(1).where(ContentMediaModel.media_id == MediaModel.id)))
             .where(~exists(select(1).where(UserModel.avatar_media_id == MediaModel.id)))
             .where(~exists(select(1).where(CompanyModel.logo_media_id == MediaModel.id)))
             .where(~exists(select(1).where(CommunityModel.logo_media_id == MediaModel.id)))
-            .where(~exists(select(1).where(EventModel.media_id == MediaModel.id)))
+            .where(~exists(select(1).where(ContentModel.media_id == MediaModel.id)))
             .where(~exists(select(1).where(StoryModel.media_id == MediaModel.id)))
         )
         res = await session.execute(stmt)
@@ -88,11 +88,11 @@ async def delete_orphaned_media() -> int:
         if cnt:
             stmt = (
                 delete(MediaModel)
-                .where(~exists(select(1).where(PostMediaModel.media_id == MediaModel.id)))
+                .where(~exists(select(1).where(ContentMediaModel.media_id == MediaModel.id)))
                 .where(~exists(select(1).where(UserModel.avatar_media_id == MediaModel.id)))
                 .where(~exists(select(1).where(CompanyModel.logo_media_id == MediaModel.id)))
                 .where(~exists(select(1).where(CommunityModel.logo_media_id == MediaModel.id)))
-                .where(~exists(select(1).where(EventModel.media_id == MediaModel.id)))
+                .where(~exists(select(1).where(ContentModel.media_id == MediaModel.id)))
                 .where(~exists(select(1).where(StoryModel.media_id == MediaModel.id)))
             )
             await session.execute(stmt)
@@ -139,4 +139,3 @@ async def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(asyncio.run(main()))
-

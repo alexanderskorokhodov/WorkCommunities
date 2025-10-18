@@ -115,13 +115,17 @@ class IEventRepo(Protocol):
         *,
         community_id: str,
         title: str,
-        starts_at,
+        event_date,
         city: str | None = None,
         location: str | None = None,
         description: str | None = None,
         registration: str | None = None,
         format: str | None = None,
         media_id: str | None = None,
+        tags: Sequence[str] | None = None,
+        skill_ids: Sequence[str] | None = None,
+        cost: int | None = None,
+        participant_payout: int | None = None,
     ) -> Event: ...
 
 
@@ -144,9 +148,9 @@ class IMediaRepo(Protocol):
 
     async def get(self, media_id: str) -> Optional[Media]: ...
 
-    async def list_for_post(self, post_id: str) -> Sequence[Media]: ...
+    async def list_for_content(self, content_id: str) -> Sequence[Media]: ...
 
-    async def attach_to_post(self, post_id: str, media_ids: list[str]) -> None: ...
+    async def attach_to_content(self, content_id: str, media_ids: list[str]) -> None: ...
 
 
 class ICompanyFollowRepo(Protocol):
