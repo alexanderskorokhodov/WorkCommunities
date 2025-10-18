@@ -39,6 +39,8 @@ class ProfileModel(Base):
 class CompanyModel(Base):
     __tablename__ = "companies"
     id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)
+    # Phone for company authentication/contacts (unique)
+    phone: Mapped[str | None] = mapped_column(String, unique=True, index=True, nullable=True)
     name: Mapped[str] = mapped_column(String)
     description: Mapped[str | None] = mapped_column(Text)
     owner_user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), index=True, nullable=True)

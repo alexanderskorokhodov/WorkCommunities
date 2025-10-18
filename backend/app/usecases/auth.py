@@ -29,17 +29,23 @@ class AuthUseCase:
         ok = await self.otps.verify(phone, code)
         if not ok:
             raise ValueError("Invalid or expired code")
-        # Ensure there is a company user for this phone
+        # Ensure there is a company user for this phone (kept for compatibility)
         user = await self.users.get_by_phone(phone)
         if not user or user.role != "company":
-            # create or upgrade to company by phone
             user = await self.users.ensure_company_by_phone(phone)
+
         company_id = None
         if self.companies:
-            c = await self.companies.get_by_owner(user.id)
+            # Prefer resolving company by phone
+            c = await self.companies.get_by_phone(phone)
             if not c:
-                # Create a minimal company profile for the owner
-                c = await self.companies.create(name="My Company", owner_user_id=user.id)
+                # Fallback to owner mapping, or create a minimal company bound to this phone
+                c = await self.companies.get_by_owner(user.id)
+                if not c:
+                    c = await self.companies.create(name="My Company", owner_user_id=user.id, phone=phone)
+                elif not getattr(c, "phone", None):
+                    # Backfill phone if missing
+                    c = await self.companies.update(c.id, phone=phone)
             company_id = c.id
         return create_access_token(subject=user.id, role="company", company_id=company_id)
 

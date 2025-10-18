@@ -11,6 +11,7 @@ from .sql_models import CompanyModel, CommunityModel, MembershipModel
 def _from_row(m: CompanyModel) -> Company:
     return Company(
         id=m.id,
+        phone=m.phone,
         name=m.name,
         description=m.description,
         logo_media_id=m.logo_media_id,
@@ -27,8 +28,8 @@ class CompanyRepo(ICompanyRepo):
         row = res.scalar_one_or_none()
         return _from_row(row) if row else None
 
-    async def create(self, *, name: str, description: str | None = None, owner_user_id: str | None = None, tags: list[str] | None = None) -> Company:
-        m = CompanyModel(name=name, description=description, owner_user_id=owner_user_id, tags=",".join(tags) if tags else None)
+    async def create(self, *, name: str, description: str | None = None, owner_user_id: str | None = None, phone: str | None = None, tags: list[str] | None = None) -> Company:
+        m = CompanyModel(name=name, description=description, owner_user_id=owner_user_id, phone=phone, tags=",".join(tags) if tags else None)
         self.s.add(m)
         await self.s.flush()
         return _from_row(m)
@@ -57,5 +58,10 @@ class CompanyRepo(ICompanyRepo):
 
     async def get_by_owner(self, user_id: str) -> Optional[Company]:
         res = await self.s.execute(select(CompanyModel).where(CompanyModel.owner_user_id == user_id))
+        row = res.scalar_one_or_none()
+        return _from_row(row) if row else None
+
+    async def get_by_phone(self, phone: str) -> Optional[Company]:
+        res = await self.s.execute(select(CompanyModel).where(CompanyModel.phone == phone))
         row = res.scalar_one_or_none()
         return _from_row(row) if row else None

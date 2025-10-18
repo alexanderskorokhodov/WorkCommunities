@@ -39,8 +39,25 @@ def role_required(*roles: str):
     return _checker
 
 
-async def get_current_company(user=Depends(role_required("company")), session=Depends(get_session)):
-    company = await CompanyRepo(session).get_by_owner(user.id)
-    if not company:
-        raise HTTPException(status_code=403, detail="Company is not set for this user")
-    return company
+async def get_current_company(
+    user=Depends(role_required("company")),
+    session=Depends(get_session),
+    creds: HTTPAuthorizationCredentials | None = Depends(bearer),
+):
+    # First try owner linkage
+    repo = CompanyRepo(session)
+    company = await repo.get_by_owner(user.id)
+    if company:
+        return company
+    # If token carries company_id, use it
+    if creds:
+        try:
+            payload = jwt.decode(creds.credentials, settings.JWT_SECRET, algorithms=[settings.JWT_ALG])
+            company_id: str | None = payload.get("company_id")
+            if company_id:
+                c2 = await repo.get(company_id)
+                if c2:
+                    return c2
+        except Exception:
+            pass
+    raise HTTPException(status_code=403, detail="Company is not set for this user")

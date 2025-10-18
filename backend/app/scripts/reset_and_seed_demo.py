@@ -70,6 +70,17 @@ async def ensure_tables():
         await conn.run_sync(Base.metadata.create_all)
 
 
+async def migrate_add_company_phone_column() -> None:
+    """Ensure companies.phone column exists (safe for old DBs)."""
+    async with engine.begin() as conn:
+        try:
+            await conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS phone varchar"))
+            await conn.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_companies_phone ON companies(phone)"))
+        except Exception:
+            # Best-effort; ignore if DB variant doesn't support IF NOT EXISTS
+            pass
+
+
 async def clear_db_keep_refs() -> None:
     """Delete rows from content tables, preserving spheres/skills/statuses."""
     async with engine.begin() as conn:
@@ -183,6 +194,7 @@ async def seed_users(session, media_map: Dict[str, str]) -> None:
     for idx, full_name in enumerate(names):
         phone = f"+7999123{idx:03d}"
         u = await user_repo.create_student(phone=phone)
+        _log(f"Created user: id={u.id}, role={u.role}, phone={u.phone}, email={u.email}, avatar_media_id={u.avatar_media_id}")
         p = await profile_repo.update(
             u.id,
             full_name=full_name,
@@ -190,9 +202,11 @@ async def seed_users(session, media_map: Dict[str, str]) -> None:
             skill_uids=[sid for sid in [sk_biotech, sk_chemeng] if sid] if idx == 0 else None,
             status_uids=status_ids,
         )
+        _log(f"Updated profile: user_id={u.id}, full_name={full_name}")
         # Set avatar for the first user
         if idx == 0 and "avatar1.png" in media_map:
             await session.execute(update(UserModel).where(UserModel.id == u.id).values(avatar_media_id=media_map["avatar1.png"]))
+            _log(f"Set avatar for user {u.id}: media_id={media_map['avatar1.png']}")
     await session.flush()
 
 
@@ -207,9 +221,10 @@ async def seed_companies_and_communities(session, media_map: Dict[str, str]) -> 
         "Компания занимается разработкой и производством чипов, RFID-меток, сенсоров и решений для “умного” мира — от банковских карт до систем безопасности и интернета вещей.\n\n"
         "Мы объединяем инженеров, разработчиков и дизайнеров, чтобы создавать реальные продукты."
     )
-    c1 = await company_repo.create(name="АО «Микрон»", description=desc_mikron)
+    c1 = await company_repo.create(name="АО «Микрон»", description=desc_mikron, phone="+79990000001")
     if "logo1.png" in media_map:
-        await company_repo.update(c1.id, logo_media_id=media_map["logo1.png"])
+        c1 = await company_repo.update(c1.id, logo_media_id=media_map["logo1.png"])
+    _log(f"Created company: id={c1.id}, name={c1.name}, phone={c1.phone}, logo_media_id={c1.logo_media_id}")
 
     comm1 = await community_repo.create(
         name="ИИ и встраиваемые системы",
@@ -217,12 +232,14 @@ async def seed_companies_and_communities(session, media_map: Dict[str, str]) -> 
         description="Исследуем и создаём интеллектуальные решения на базе микрочипов и IoT.",
         logo_media_id=media_map.get("community1.png"),
     )
+    _log(f"Created community: id={comm1.id}, company_id={comm1.company_id}, name={comm1.name}, logo_media_id={comm1.logo_media_id}")
     comm3 = await community_repo.create(
         name="Проектирование и сборка",
         company_id=c1.id,
         description="Проектирование хим. соединений, погружение в фармацевтику",
         logo_media_id=media_map.get("community3.png"),
     )
+    _log(f"Created community: id={comm3.id}, company_id={comm3.company_id}, name={comm3.name}, logo_media_id={comm3.logo_media_id}")
 
     # Company 2: R-Pharm
     desc_rpharm = (
@@ -230,9 +247,10 @@ async def seed_companies_and_communities(session, media_map: Dict[str, str]) -> 
         "Компания занимается разработкой и производством чипов, RFID-меток, сенсоров и решений для “умного” мира — от банковских карт до систем безопасности и интернета вещей.\n\n"
         "Мы объединяем инженеров, разработчиков и дизайнеров, чтобы создавать реальные продукты."
     )
-    c2 = await company_repo.create(name="R-Pharm", description=desc_rpharm)
+    c2 = await company_repo.create(name="R-Pharm", description=desc_rpharm, phone="+79990000002")
     if "logo2.png" in media_map:
-        await company_repo.update(c2.id, logo_media_id=media_map["logo2.png"])
+        c2 = await company_repo.update(c2.id, logo_media_id=media_map["logo2.png"])
+    _log(f"Created company: id={c2.id}, name={c2.name}, phone={c2.phone}, logo_media_id={c2.logo_media_id}")
 
     comm2 = await community_repo.create(
         name="Химическая инженерия",
@@ -240,6 +258,7 @@ async def seed_companies_and_communities(session, media_map: Dict[str, str]) -> 
         description="Проектирование хим. соединений, погружение в фармацевтику",
         logo_media_id=media_map.get("community2.png"),
     )
+    _log(f"Created community: id={comm2.id}, company_id={comm2.company_id}, name={comm2.name}, logo_media_id={comm2.logo_media_id}")
 
     return {
         "companies": {"mikron": c1.id, "rpharm": c2.id},
@@ -252,7 +271,7 @@ async def seed_post(session, ids: dict, media_map: Dict[str, str]) -> None:
     title = "Как рождается микрочип"
     body = "Краткий обзор этапов производства микрочипов: проектирование, фотолитография, травление и сборка."
     media_ids = [media_map["post1.png"]] if "post1.png" in media_map else []
-    await post_repo.create(
+    post = await post_repo.create(
         community_id=ids["communities"]["c3"],
         title=title,
         body=body,
@@ -260,6 +279,7 @@ async def seed_post(session, ids: dict, media_map: Dict[str, str]) -> None:
         tags=None,
         skill_ids=None,
     )
+    _log(f"Created post: title={title}, community_id={ids['communities']['c3']}, media_count={len(media_ids)}")
 
 
 async def seed_events(session, ids: dict, media_map: Dict[str, str]) -> None:
@@ -276,7 +296,7 @@ async def seed_events(session, ids: dict, media_map: Dict[str, str]) -> None:
     d3 = dt.datetime(2025, 10, 25, 12, 0, 0)
     d4 = dt.datetime(2025, 10, 24, 17, 0, 0)
 
-    await event_repo.create(
+    e1 = await event_repo.create(
         community_id=ids["communities"]["c1"],
         title="Хакатон «BioData Hack»",
         event_date=d1,
@@ -292,7 +312,7 @@ async def seed_events(session, ids: dict, media_map: Dict[str, str]) -> None:
         participant_payout=None,
     )
 
-    await event_repo.create(
+    e2 = await event_repo.create(
         community_id=ids["communities"]["c2"],
         title="Воркшоп «Схемотехника для начинающих»",
         event_date=d2,
@@ -308,7 +328,7 @@ async def seed_events(session, ids: dict, media_map: Dict[str, str]) -> None:
         participant_payout=None,
     )
 
-    await event_repo.create(
+    e3 = await event_repo.create(
         community_id=ids["communities"]["c2"],
         title="Вебинар «3 навыка, которые …»",
         event_date=d3,
@@ -324,7 +344,7 @@ async def seed_events(session, ids: dict, media_map: Dict[str, str]) -> None:
         participant_payout=None,
     )
 
-    await event_repo.create(
+    e4 = await event_repo.create(
         community_id=ids["communities"]["c2"],
         title="Онлайн-воркшоп от R-Pharm с Василием Игнатьевым",
         event_date=d4,
@@ -346,6 +366,8 @@ async def seed_events(session, ids: dict, media_map: Dict[str, str]) -> None:
 
 async def run(base_url: str, media_dir: str) -> None:
     await ensure_tables()
+    # Lightweight migration to add companies.phone if missing
+    await migrate_add_company_phone_column()
     _log("Clearing DB (keeping references)...")
     await clear_db_keep_refs()
     _log("Uploading media...")
@@ -376,3 +398,5 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+    for e in [e1, e2, e3, e4]:
+        _log(f"Created event: title={e.title}, community_id={e.community_id}, date={e.event_date}")
