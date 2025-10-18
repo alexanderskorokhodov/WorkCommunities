@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import Optional
@@ -54,7 +54,7 @@ class Company:
     name: str
     description: Optional[str]
     logo_media_id: Optional[str] = None
-    tags: list[str]
+    tags: list[str] = field(default_factory=list)
 
 
 @dataclass
