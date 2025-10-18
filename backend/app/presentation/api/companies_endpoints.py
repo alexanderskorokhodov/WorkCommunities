@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.adapters.db import get_session
 from app.core.deps import get_current_user
 from app.infrastructure.repos.company_repo import CompanyRepo
+from app.infrastructure.repos.company_follow_repo import CompanyFollowRepo
 from app.presentation.schemas.companies import CompanyOut
 from app.usecases.companies import CompanyUseCase
 
@@ -16,3 +17,23 @@ async def my_companies(session: AsyncSession = Depends(get_session), user=Depend
     companies = await uc.get_companies_for_user(user.id)
     return [CompanyOut(id=c.id, name=c.name, description=c.description) for c in companies]
 
+
+@router.get("/me/followed", response_model=list[CompanyOut])
+async def my_followed_companies(session: AsyncSession = Depends(get_session), user=Depends(get_current_user)):
+    uc = CompanyUseCase(companies=CompanyRepo(session), company_follows=CompanyFollowRepo(session))
+    companies = await uc.list_followed(user.id)
+    return [CompanyOut(id=c.id, name=c.name, description=c.description) for c in companies]
+
+
+@router.post("/{company_id}/follow")
+async def follow_company(company_id: str, session: AsyncSession = Depends(get_session), user=Depends(get_current_user)):
+    uc = CompanyUseCase(companies=CompanyRepo(session), company_follows=CompanyFollowRepo(session))
+    await uc.follow(user.id, company_id)
+    return {"status": "ok"}
+
+
+@router.delete("/{company_id}/follow")
+async def unfollow_company(company_id: str, session: AsyncSession = Depends(get_session), user=Depends(get_current_user)):
+    uc = CompanyUseCase(companies=CompanyRepo(session), company_follows=CompanyFollowRepo(session))
+    await uc.unfollow(user.id, company_id)
+    return {"status": "ok"}

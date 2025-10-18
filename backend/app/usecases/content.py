@@ -1,11 +1,12 @@
-from app.domain.repositories import IPostRepo, IStoryRepo, IMediaRepo
+from app.domain.repositories import IPostRepo, IStoryRepo, IMediaRepo, ICompanyFollowRepo
 
 
 class ContentUseCase:
-    def __init__(self, posts: IPostRepo, stories: IStoryRepo, media: IMediaRepo):
+    def __init__(self, posts: IPostRepo, stories: IStoryRepo, media: IMediaRepo, company_follows: ICompanyFollowRepo | None = None):
         self.posts = posts
         self.stories = stories
         self.media = media
+        self.company_follows = company_follows
 
     async def create_post(self, *, author_user_id: str, community_id: str, title: str, body: str, featured: bool,
                           media_uids: list[str]):
@@ -59,3 +60,12 @@ class ContentUseCase:
 
     async def get_story(self, story_id: str):
         return await self.stories.get(story_id)
+
+    async def posts_from_followed_communities(self, user_id: str, limit: int = 20):
+        return await self.posts.list_for_followed_communities(user_id, limit)
+
+    async def stories_for_followed_companies(self, user_id: str, limit: int = 20):
+        if not self.company_follows:
+            return []
+        company_ids = await self.company_follows.list_company_ids_for_user(user_id)
+        return await self.stories.list_for_companies(company_ids, limit)

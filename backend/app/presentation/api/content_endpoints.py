@@ -6,6 +6,7 @@ from app.core.deps import get_current_user
 from app.infrastructure.repos.media_repo import MediaRepo
 from app.infrastructure.repos.post_repo import PostRepo  # реализуй как прежде
 from app.infrastructure.repos.story_repo import StoryRepo  # реализуй как прежде
+from app.infrastructure.repos.company_follow_repo import CompanyFollowRepo
 from app.presentation.schemas.content import PostCreateIn, PostUpdateIn, PostOut, StoryCreateIn, StoryOut, MediaOut
 from app.usecases.content import ContentUseCase
 
@@ -115,3 +116,32 @@ async def list_my_featured_posts(limit: int = 20, session: AsyncSession = Depend
             media=[_media_to_out(m) for m in media]
         ))
     return out
+
+
+@router.get("/me/posts/from-followed-communities", response_model=list[PostOut])
+async def posts_from_followed_communities(limit: int = 20, session: AsyncSession = Depends(get_session),
+                                          user=Depends(get_current_user)):
+    uc = ContentUseCase(posts=PostRepo(session), stories=StoryRepo(session), media=MediaRepo(session))
+    posts = await uc.posts_from_followed_communities(user_id=user.id, limit=limit)
+    out: list[PostOut] = []
+    for p in posts:
+        media = await MediaRepo(session).list_for_post(p.id)
+        out.append(PostOut(
+            id=p.id, community_id=p.community_id, author_user_id=p.author_user_id,
+            title=p.title, body=p.body, featured=p.featured,
+            media=[_media_to_out(m) for m in media]
+        ))
+    return out
+
+
+@router.get("/me/stories/from-followed-companies", response_model=list[StoryOut])
+async def stories_from_followed_companies(limit: int = 20, session: AsyncSession = Depends(get_session),
+                                          user=Depends(get_current_user)):
+    uc = ContentUseCase(posts=PostRepo(session), stories=StoryRepo(session), media=MediaRepo(session),
+                        company_follows=CompanyFollowRepo(session))
+    stories = await uc.stories_for_followed_companies(user.id, limit)
+    # Поскольку domain Story не содержит media_id, вернем только media_url
+    return [
+        StoryOut(id=s.id, community_id=s.company_id, title=s.title, media_url=s.media_url, media=None)
+        for s in stories
+    ]

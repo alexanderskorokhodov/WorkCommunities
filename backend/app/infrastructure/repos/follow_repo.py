@@ -1,4 +1,4 @@
-from sqlalchemy import delete
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities import Follow
@@ -25,3 +25,6 @@ class FollowRepo(IFollowRepo):
             delete(FollowModel).where(FollowModel.user_id == user_id, FollowModel.community_id == community_id)
         )
 
+    async def list_community_ids_for_user(self, user_id: str) -> list[str]:
+        res = await self.s.execute(select(FollowModel.community_id).where(FollowModel.user_id == user_id))
+        return [r for r, in res.all()]

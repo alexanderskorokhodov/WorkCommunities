@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities import Post
 from app.domain.repositories import IPostRepo
-from app.infrastructure.repos.sql_models import PostModel, PostMediaModel
+from app.infrastructure.repos.sql_models import PostModel, PostMediaModel, FollowModel
 
 
 def _to_domain_post(m: PostModel) -> Post:
@@ -85,5 +85,26 @@ class PostRepo(IPostRepo):
         q = f"%{query.lower()}%"
         res = await self.s.execute(
             select(PostModel).where(PostModel.title.ilike(q) | PostModel.body.ilike(q)).limit(limit)
+        )
+        return [_to_domain_post(r) for r in res.scalars().all()]
+
+    async def list_for_followed_communities(self, user_id: str, limit: int = 20) -> Sequence[Post]:
+        res = await self.s.execute(
+            select(PostModel)
+            .join(FollowModel, FollowModel.community_id == PostModel.community_id)
+            .where(FollowModel.user_id == user_id)
+            .order_by(PostModel.created_at.desc())
+            .limit(limit)
+        )
+        return [_to_domain_post(r) for r in res.scalars().all()]
+
+    async def list_for_communities(self, community_ids: Sequence[str], limit: int = 20) -> Sequence[Post]:
+        if not community_ids:
+            return []
+        res = await self.s.execute(
+            select(PostModel)
+            .where(PostModel.community_id.in_(community_ids))
+            .order_by(PostModel.created_at.desc())
+            .limit(limit)
         )
         return [_to_domain_post(r) for r in res.scalars().all()]

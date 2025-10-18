@@ -45,3 +45,14 @@ class StoryRepo(IStoryRepo):
         res = await self.s.execute(select(StoryModel).where(StoryModel.id == story_id))
         row = res.scalar_one_or_none()
         return _to_domain_story(row) if row else None
+
+    async def list_for_companies(self, company_ids: Sequence[str], limit: int = 20) -> Sequence[Story]:
+        if not company_ids:
+            return []
+        res = await self.s.execute(
+            select(StoryModel)
+            .where(StoryModel.company_id.in_(company_ids))
+            .order_by(StoryModel.created_at.desc())
+            .limit(limit)
+        )
+        return [_to_domain_story(r) for r in res.scalars().all()]
