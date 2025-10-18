@@ -339,6 +339,7 @@ async def seed_events(session, ids: dict, media_map: Dict[str, str]) -> None:
         cost=100,
         participant_payout=None,
     )
+    _log(f"Created event: title={e1.title}, community_id={e1.community_id}, date={e1.event_date}, cost={e1.cost}")
 
     e2 = await event_repo.create(
         community_id=ids["communities"]["c2"],
@@ -355,6 +356,7 @@ async def seed_events(session, ids: dict, media_map: Dict[str, str]) -> None:
         cost=None,
         participant_payout=None,
     )
+    _log(f"Created event: title={e2.title}, community_id={e2.community_id}, date={e2.event_date}, skills={["Инженерия"] if sk_ids else []}")
 
     e3 = await event_repo.create(
         community_id=ids["communities"]["c2"],
@@ -371,6 +373,7 @@ async def seed_events(session, ids: dict, media_map: Dict[str, str]) -> None:
         cost=10,
         participant_payout=None,
     )
+    _log(f"Created event: title={e3.title}, community_id={e3.community_id}, date={e3.event_date}, cost={e3.cost}, skills={["Инженерия"] if sk_ids else []}")
 
     e4 = await event_repo.create(
         community_id=ids["communities"]["c2"],
@@ -390,6 +393,7 @@ async def seed_events(session, ids: dict, media_map: Dict[str, str]) -> None:
         cost=None,
         participant_payout=5,
     )
+    _log(f"Created event: title={e4.title}, community_id={e4.community_id}, date={e4.event_date}, registration={e4.registration}, format={e4.format}, participant_payout={e4.participant_payout}")
 
 
 async def run(base_url: str, media_dir: str) -> None:
@@ -434,5 +438,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-    for e in [e1, e2, e3, e4]:
-        _log(f"Created event: title={e.title}, community_id={e.community_id}, date={e.event_date}")
