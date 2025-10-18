@@ -6,7 +6,9 @@ from app.core.deps import get_current_user, role_required, get_current_company
 from app.infrastructure.repos.company_repo import CompanyRepo
 from app.infrastructure.repos.community_repo import CommunityRepo
 from app.infrastructure.repos.company_follow_repo import CompanyFollowRepo
+from app.infrastructure.repos.media_repo import MediaRepo
 from app.presentation.schemas.companies import CompanyOut, CompanyUpdateIn, CompanyDetailOut
+from app.presentation.schemas.content import MediaOut
 from app.presentation.schemas.communities import CommunityOut
 from app.usecases.companies import CompanyUseCase
 
@@ -29,6 +31,8 @@ async def get_company(company_id: str, session: AsyncSession = Depends(get_sessi
 
     comm_repo = CommunityRepo(session)
     communities = await comm_repo.list_for_company(company_id)
+    media_repo = MediaRepo(session)
+    media = await media_repo.list_for_company(company_id)
 
     return CompanyDetailOut(
         id=company.id,
@@ -36,6 +40,7 @@ async def get_company(company_id: str, session: AsyncSession = Depends(get_sessi
         description=company.description,
         logo_media_id=company.logo_media_id,
         tags=company.tags,
+        media=[MediaOut(id=m.id, kind=m.kind.value if hasattr(m.kind, "value") else m.kind, mime=m.mime, ext=m.ext, size=m.size, url=m.url) for m in media],
         communities=[
             CommunityOut(
                 id=i.id,
@@ -79,6 +84,10 @@ async def update_my_company(
     session: AsyncSession = Depends(get_session),
     company=Depends(get_current_company),
 ):
+    payload = data.model_dump(exclude_unset=True)
+    media_uids = payload.pop("media_uids", None)
     uc = CompanyUseCase(companies=CompanyRepo(session))
-    c = await uc.update(company.id, **data.model_dump(exclude_unset=True))
+    c = await uc.update(company.id, **payload)
+    if media_uids is not None:
+        await MediaRepo(session).replace_for_company(company.id, media_uids)
     return CompanyOut(id=c.id, name=c.name, description=c.description, logo_media_id=c.logo_media_id, tags=c.tags)

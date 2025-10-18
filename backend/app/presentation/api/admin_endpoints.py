@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.adapters.db import get_session
 from app.core.deps import role_required
 from app.infrastructure.repos.company_repo import CompanyRepo
+from app.infrastructure.repos.media_repo import MediaRepo
 from app.infrastructure.repos.community_repo import CommunityRepo
 from app.presentation.schemas.companies import CompanyCreateIn, CompanyUpdateIn, CompanyOut
 from app.presentation.schemas.communities import CommunityCreateIn, CommunityUpdateIn, CommunityOut
@@ -25,9 +26,13 @@ async def admin_create_company(data: CompanyCreateIn, session: AsyncSession = De
 @router.patch("/companies/{company_id}", response_model=CompanyOut, dependencies=[Depends(role_required("admin"))])
 async def admin_update_company(company_id: str, data: CompanyUpdateIn, session: AsyncSession = Depends(get_session)):
     uc = CompanyUseCase(companies=CompanyRepo(session))
-    c = await uc.update(company_id, **data.model_dump(exclude_unset=True))
+    payload = data.model_dump(exclude_unset=True)
+    media_uids = payload.pop("media_uids", None)
+    c = await uc.update(company_id, **payload)
     if not c:
         raise HTTPException(404, "Not found")
+    if media_uids is not None:
+        await MediaRepo(session).replace_for_company(company_id, media_uids)
     return CompanyOut(id=c.id, name=c.name, description=c.description, tags=c.tags)
 
 

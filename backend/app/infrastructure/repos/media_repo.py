@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities import Media, MediaType
 from app.domain.repositories import IMediaRepo
-from .sql_models import MediaModel, ContentMediaModel
+from .sql_models import MediaModel, ContentMediaModel, CompanyMediaModel
 
 
 class MediaRepo(IMediaRepo):
@@ -47,3 +47,28 @@ class MediaRepo(IMediaRepo):
                   created_at=m.created_at)
             for m in rows
         ]
+
+    async def list_for_company(self, company_id: str) -> Sequence[Media]:
+        stmt = (
+            select(MediaModel)
+            .join(CompanyMediaModel, CompanyMediaModel.media_id == MediaModel.id)
+            .where(CompanyMediaModel.company_id == company_id)
+            .order_by(CompanyMediaModel.order_index.asc())
+        )
+        res = await self.s.execute(stmt)
+        rows = res.scalars().all()
+        return [
+            Media(id=m.id, kind=MediaType(m.kind), mime=m.mime, ext=m.ext, size=m.size, url=m.url,
+                  created_at=m.created_at)
+            for m in rows
+        ]
+
+    async def replace_for_company(self, company_id: str, media_ids: list[str]) -> None:
+        # Remove existing and insert in order
+        # Use ORM bulk operations to stay simple
+        await self.s.execute(
+            CompanyMediaModel.__table__.delete().where(CompanyMediaModel.company_id == company_id)
+        )
+        for idx, mid in enumerate(media_ids):
+            self.s.add(CompanyMediaModel(company_id=company_id, media_id=mid, order_index=idx))
+        await self.s.flush()

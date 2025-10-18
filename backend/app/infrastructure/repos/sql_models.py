@@ -142,6 +142,15 @@ class ContentMediaModel(Base):
     __table_args__ = (UniqueConstraint("content_id", "media_id", name="uq_content_media"),)
 
 
+class CompanyMediaModel(Base):
+    __tablename__ = "company_media"
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)
+    company_id: Mapped[str] = mapped_column(ForeignKey("companies.id"), index=True)
+    media_id: Mapped[str] = mapped_column(ForeignKey("media.id"), index=True)
+    order_index: Mapped[int] = mapped_column(Integer, default=0)
+    __table_args__ = (UniqueConstraint("company_id", "media_id", name="uq_company_media"),)
+
+
 class StoryModel(Base):
     __tablename__ = "stories"
     id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)
