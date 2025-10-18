@@ -14,6 +14,27 @@ from app.usecases.communities import CommunityUseCase
 router = APIRouter()
 
 
+@router.get("/mine", response_model=list[CommunityOut])
+async def list_my_communities(
+    session: AsyncSession = Depends(get_session),
+    user=Depends(get_current_user),
+):
+    repo = CommunityRepo(session)
+    items = await repo.list_for_user(user.id)
+    return [
+        CommunityOut(
+            id=i.id,
+            company_id=i.company_id,
+            name=i.name,
+            description=i.description,
+            telegram_url=i.telegram_url,
+            tags=i.tags,
+            is_archived=i.is_archived,
+        )
+        for i in items
+    ]
+
+
 @router.get("/joinable", response_model=list[CommunityOut])
 async def list_joinable_communities(
     offset: int = 0,
