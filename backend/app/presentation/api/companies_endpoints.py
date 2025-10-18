@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.db import get_session
-from app.core.deps import get_current_user, role_required
+from app.core.deps import get_current_user, role_required, get_current_company
 from app.infrastructure.repos.company_repo import CompanyRepo
 from app.infrastructure.repos.company_follow_repo import CompanyFollowRepo
 from app.presentation.schemas.companies import CompanyOut, CompanyUpdateIn
@@ -39,9 +39,12 @@ async def unfollow_company(company_id: str, session: AsyncSession = Depends(get_
     return {"status": "ok"}
 
 
-@router.patch("/{company_id}", response_model=CompanyOut)
-async def update_company(company_id: str, data: CompanyUpdateIn, session: AsyncSession = Depends(get_session),
-                         user=Depends(role_required("company"))):
+@router.patch("/me", response_model=CompanyOut)
+async def update_my_company(
+    data: CompanyUpdateIn,
+    session: AsyncSession = Depends(get_session),
+    company=Depends(get_current_company),
+):
     uc = CompanyUseCase(companies=CompanyRepo(session))
-    c = await uc.update(company_id, **data.model_dump(exclude_unset=True))
+    c = await uc.update(company.id, **data.model_dump(exclude_unset=True))
     return CompanyOut(id=c.id, name=c.name, description=c.description, logo_media_id=c.logo_media_id)

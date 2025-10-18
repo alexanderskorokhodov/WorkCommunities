@@ -26,8 +26,6 @@ def _to_out(p) -> ProfileOut:
         full_name=p.full_name,
         portfolio_url=p.portfolio_url,
         description=p.description,
-        city=p.city,
-        interests=p.interests,
         skills=skills,
         statuses=statuses,
     )
@@ -45,4 +43,3 @@ async def update_my_profile(data: ProfileUpdateIn, session: AsyncSession = Depen
     uc = ProfileUseCase(profiles=ProfileRepo(session))
     p = await uc.update(user.id, **data.model_dump(exclude_unset=True))
     return _to_out(p)
-

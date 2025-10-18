@@ -27,8 +27,6 @@ class ProfileOut(BaseModel):
     full_name: Optional[str] = None
     portfolio_url: Optional[str] = None
     description: Optional[str] = None
-    city: Optional[str] = None
-    interests: List[str] = []
     skills: List[SkillOut] = []
     statuses: List[StatusOut] = []
 
@@ -37,8 +35,5 @@ class ProfileUpdateIn(BaseModel):
     full_name: Optional[str] = None
     portfolio_url: Optional[str] = None
     description: Optional[str] = None
-    city: Optional[str] = None
-    interests: Optional[List[str]] = None
     skill_uids: Optional[List[str]] = None
     status_uids: Optional[List[str]] = None
-

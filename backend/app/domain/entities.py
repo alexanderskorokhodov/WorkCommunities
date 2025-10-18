@@ -19,8 +19,6 @@ class Profile:
     id: str
     user_id: str
     full_name: Optional[str]
-    city: Optional[str]
-    interests: list[str]
     portfolio_url: Optional[str]
     description: Optional[str]
     skills: list["Skill"]

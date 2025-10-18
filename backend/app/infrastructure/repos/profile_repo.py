@@ -20,8 +20,6 @@ def _profile_from_row(m: ProfileModel) -> Profile:
         id=m.id,
         user_id=m.user_id,
         full_name=m.full_name,
-        city=m.city,
-        interests=(m.interests.split(",") if m.interests else []),
         portfolio_url=m.portfolio_url,
         description=m.description,
         skills=[],
@@ -78,13 +76,13 @@ class ProfileRepo(IProfileRepo):
         return profile
 
     async def create(self, user_id: str, **data) -> Profile:
-        interests = (data.pop("interests", None) or [])
-        m = ProfileModel(user_id=user_id,
-                         full_name=data.get("full_name"),
-                         city=data.get("city"),
-                         interests=",".join(interests) if interests else None,
-                         portfolio_url=data.get("portfolio_url"),
-                         description=data.get("description"))
+        m = ProfileModel(
+            user_id=user_id,
+            full_name=data.get("full_name"),
+            portfolio_url=data.get("portfolio_url"),
+            description=data.get("description"),
+            # keep DB columns city/interests untouched; they may exist but are deprecated in API
+        )
         self.s.add(m)
         await self.s.flush()
         p = _profile_from_row(m)
@@ -119,9 +117,6 @@ class ProfileRepo(IProfileRepo):
             prof = await self.create(user_id)
 
         update_data = data.copy()
-        # handle interests as CSV
-        if "interests" in update_data and update_data["interests"] is not None:
-            update_data["interests"] = ",".join(update_data["interests"]) if update_data["interests"] else None
 
         # pop relation updates
         skill_uids = update_data.pop("skill_uids", None)
@@ -147,4 +142,3 @@ class ProfileRepo(IProfileRepo):
         await self.s.flush()
         # reload
         return await self.get(prof.id)
-
