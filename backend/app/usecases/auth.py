@@ -1,6 +1,7 @@
 from app.core.config import settings
 from app.core.security import create_access_token, hash_password, verify_password
 from app.domain.repositories import IUserRepo, IOTPRepo, ICompanyRepo
+import random
 
 
 class AuthUseCase:
@@ -23,6 +24,24 @@ class AuthUseCase:
             user = await self.users.create_student(phone)
         token = create_access_token(subject=user.id, role="student")
         return token
+
+    async def company_verify_otp(self, phone: str, code: str) -> str:
+        ok = await self.otps.verify(phone, code)
+        if not ok:
+            raise ValueError("Invalid or expired code")
+        # Ensure there is a company user for this phone
+        user = await self.users.get_by_phone(phone)
+        if not user or user.role != "company":
+            # create or upgrade to company by phone
+            user = await self.users.ensure_company_by_phone(phone)
+        company_id = None
+        if self.companies:
+            c = await self.companies.get_by_owner(user.id)
+            if not c:
+                # Create a minimal company profile for the owner
+                c = await self.companies.create(name="My Company", owner_user_id=user.id)
+            company_id = c.id
+        return create_access_token(subject=user.id, role="company", company_id=company_id)
 
     async def company_signup(self, email: str, password: str, name: str) -> str:
         if await self.users.get_by_email(email):

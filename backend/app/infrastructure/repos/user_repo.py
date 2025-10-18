@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.domain.entities import User
 from app.domain.repositories import IUserRepo
 from .sql_models import UserModel
+from sqlalchemy import update
 
 
 class UserRepo(IUserRepo):
@@ -59,6 +60,22 @@ class UserRepo(IUserRepo):
         m = UserModel(role="company", email=email, password_hash=password_hash)
         self.s.add(m)
         await self.s.flush()
+        return await self.get_by_id(m.id)
+
+    async def ensure_company_by_phone(self, phone: str) -> User:
+        # Try get by phone
+        res = await self.s.execute(select(UserModel).where(UserModel.phone == phone))
+        m = res.scalar_one_or_none()
+        if not m:
+            # Create new company user with this phone
+            m = UserModel(role="company", phone=phone)
+            self.s.add(m)
+            await self.s.flush()
+            return await self.get_by_id(m.id)
+        # If exists but role differs, update to company
+        if m.role != "company":
+            await self.s.execute(update(UserModel).where(UserModel.id == m.id).values(role="company"))
+            await self.s.flush()
         return await self.get_by_id(m.id)
 
     async def list_all(self):

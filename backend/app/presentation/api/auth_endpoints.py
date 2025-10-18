@@ -28,6 +28,23 @@ async def verify_otp(data: OTPVerifyIn, session: AsyncSession = Depends(get_sess
     return TokenOut(access_token=token)
 
 
+@router.post("/company/otp/request", status_code=204)
+async def company_request_otp(data: PhoneIn, session: AsyncSession = Depends(get_session)):
+    uc = AuthUseCase(users=UserRepo(session), otps=OTPRepo(session))
+    await uc.request_otp(data.phone)
+    return None
+
+
+@router.post("/company/otp/verify", response_model=TokenOut)
+async def company_verify_otp(data: OTPVerifyIn, session: AsyncSession = Depends(get_session)):
+    uc = AuthUseCase(users=UserRepo(session), otps=OTPRepo(session), companies=CompanyRepo(session))
+    try:
+        token = await uc.company_verify_otp(data.phone, data.code)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid code")
+    return TokenOut(access_token=token)
+
+
 @router.post("/company/signup", response_model=TokenOut)
 async def company_signup(data: CompanySignupIn, session: AsyncSession = Depends(get_session)):
     uc = AuthUseCase(users=UserRepo(session), otps=OTPRepo(session), companies=CompanyRepo(session))
