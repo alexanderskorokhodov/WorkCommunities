@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException
+import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.db import get_session
-from app.core.deps import get_current_user, role_required, get_current_company
+from app.core.deps import get_current_user, role_required, get_current_company, bearer
+from app.core.config import settings
 from app.infrastructure.repos.community_repo import CommunityRepo
 from app.infrastructure.repos.follow_repo import FollowRepo
 from app.infrastructure.repos.company_repo import CompanyRepo
@@ -29,14 +31,22 @@ router = APIRouter()
 async def list_my_communities(
     session: AsyncSession = Depends(get_session),
     user=Depends(get_current_user),
+    creds = Depends(bearer),
 ):
     c_repo = CommunityRepo(session)
     # If company user — return communities of this company
     if user.role == "company":
-        company = await CompanyRepo(session).get_by_owner(user.id)
+        crepo = CompanyRepo(session)
+        company = await crepo.get_by_owner(user.id)
+        if not company and creds:
+            try:
+                payload = jwt.decode(creds.credentials, settings.JWT_SECRET, algorithms=[settings.JWT_ALG])
+                company_id = payload.get("company_id")
+                if company_id:
+                    company = await crepo.get(company_id)
+            except Exception:
+                company = None
         if not company:
-            # mirror get_current_company behavior
-            from fastapi import HTTPException
             raise HTTPException(status_code=403, detail="Company is not set for this user")
         items = await c_repo.list_for_company(company.id)
     else:
