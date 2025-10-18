@@ -81,3 +81,11 @@ class CommunityRepo(ICommunityRepo):
         )
         res = await self.s.execute(stmt)
         return [_from_row(r) for r in res.scalars().all()]
+
+    async def list_by_ids(self, ids: Sequence[str]) -> Sequence[Community]:
+        if not ids:
+            return []
+        res = await self.s.execute(
+            select(CommunityModel).where(CommunityModel.id.in_(ids), CommunityModel.is_archived == False)
+        )
+        return [_from_row(r) for r in res.scalars().all()]

@@ -5,6 +5,7 @@ from app.adapters.db import get_session
 from app.core.deps import get_current_user, role_required, get_current_company
 from app.infrastructure.repos.community_repo import CommunityRepo
 from app.infrastructure.repos.follow_repo import FollowRepo
+from app.infrastructure.repos.company_repo import CompanyRepo
 from app.infrastructure.repos.post_repo import PostRepo
 from app.infrastructure.repos.media_repo import MediaRepo
 from app.presentation.schemas.communities import CommunityOut, CommunityCreateIn, CommunityUpdateIn
@@ -19,8 +20,19 @@ async def list_my_communities(
     session: AsyncSession = Depends(get_session),
     user=Depends(get_current_user),
 ):
-    repo = CommunityRepo(session)
-    items = await repo.list_for_user(user.id)
+    c_repo = CommunityRepo(session)
+    # If company user — return communities of this company
+    if user.role == "company":
+        company = await CompanyRepo(session).get_by_owner(user.id)
+        if not company:
+            # mirror get_current_company behavior
+            from fastapi import HTTPException
+            raise HTTPException(status_code=403, detail="Company is not set for this user")
+        items = await c_repo.list_for_company(company.id)
+    else:
+        # Regular user — return followed communities
+        follow_ids = await FollowRepo(session).list_community_ids_for_user(user.id)
+        items = await c_repo.list_by_ids(follow_ids)
     return [
         CommunityOut(
             id=i.id,
