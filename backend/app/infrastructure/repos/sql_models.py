@@ -100,6 +100,14 @@ class EventModel(Base):
     media_id: Mapped[str | None] = mapped_column(ForeignKey("media.id"), index=True)
 
 
+class EventParticipantModel(Base):
+    __tablename__ = "event_participants"
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
+    event_id: Mapped[str] = mapped_column(ForeignKey("events.id"), index=True)
+    __table_args__ = (UniqueConstraint("user_id", "event_id", name="uq_event_participant"),)
+
+
 class OTPModel(Base):
     __tablename__ = "otps"
     id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)

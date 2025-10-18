@@ -4,9 +4,9 @@ from typing import Sequence
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.domain.entities import Event
+from app.domain.entities import Event, EventParticipant
 from app.domain.repositories import IEventRepo
-from .sql_models import EventModel, MembershipModel, FollowModel
+from .sql_models import EventModel, MembershipModel, FollowModel, EventParticipantModel
 
 
 def _from_row(m: EventModel) -> Event:
@@ -45,6 +45,19 @@ class EventRepo(IEventRepo):
         res = await self.s.execute(stmt)
         return [_from_row(r) for r in res.scalars().all()]
 
+    async def list_joined_for_user(self, user_id: str, limit: int = 20) -> Sequence[Event]:
+        now = datetime.utcnow()
+        # события, на которые пользователь зарегистрирован
+        joined_event_ids = select(EventParticipantModel.event_id).where(EventParticipantModel.user_id == user_id)
+        stmt = (
+            select(EventModel)
+            .where(EventModel.id.in_(joined_event_ids), EventModel.starts_at >= now)
+            .order_by(EventModel.starts_at.asc())
+            .limit(limit)
+        )
+        res = await self.s.execute(stmt)
+        return [_from_row(r) for r in res.scalars().all()]
+
     async def create(
         self,
         *,
@@ -72,3 +85,19 @@ class EventRepo(IEventRepo):
         self.s.add(m)
         await self.s.flush()
         return _from_row(m)
+
+    async def join(self, user_id: str, event_id: str) -> EventParticipant:
+        # idempotent join: return existing if already joined
+        res = await self.s.execute(
+            select(EventParticipantModel).where(
+                EventParticipantModel.user_id == user_id, EventParticipantModel.event_id == event_id
+            )
+        )
+        existing = res.scalars().first()
+        if existing:
+            return EventParticipant(id=existing.id, user_id=existing.user_id, event_id=existing.event_id)
+
+        m = EventParticipantModel(user_id=user_id, event_id=event_id)
+        self.s.add(m)
+        await self.s.flush()
+        return EventParticipant(id=m.id, user_id=m.user_id, event_id=m.event_id)

@@ -1,6 +1,20 @@
 from typing import Protocol, Sequence, Optional
 
-from app.domain.entities import User, Profile, Company, Community, Membership, Post, Story, Event, Follow, CompanyFollow, OTP, Media
+from app.domain.entities import (
+    User,
+    Profile,
+    Company,
+    Community,
+    Membership,
+    Post,
+    Story,
+    Event,
+    Follow,
+    CompanyFollow,
+    OTP,
+    Media,
+    EventParticipant,
+)
 
 
 class IUserRepo(Protocol):
@@ -91,6 +105,8 @@ class IStoryRepo(Protocol):
 
 class IEventRepo(Protocol):
     async def list_for_user(self, user_id: str, limit: int = 20) -> Sequence[Event]: ...
+    async def list_joined_for_user(self, user_id: str, limit: int = 20) -> Sequence[Event]: ...
+    async def join(self, user_id: str, event_id: str) -> EventParticipant: ...
     async def create(
         self,
         *,

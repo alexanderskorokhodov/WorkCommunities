@@ -31,6 +31,27 @@ async def list_upcoming(limit: int = 20, session: AsyncSession = Depends(get_ses
     ]
 
 
+@router.get("/my/upcoming", response_model=list[EventOut])
+async def list_my_upcoming(limit: int = 20, session: AsyncSession = Depends(get_session), user=Depends(get_current_user)):
+    uc = EventsUseCase(events=EventRepo(session))
+    events = await uc.my_upcoming(user.id, limit=limit)
+    return [
+        EventOut(
+            id=e.id,
+            community_id=e.community_id,
+            title=e.title,
+            starts_at=e.starts_at,
+            city=e.city,
+            location=e.location,
+            description=e.description,
+            registration=e.registration,
+            format=e.format,
+            media_id=e.media_id,
+        )
+        for e in events
+    ]
+
+
 @router.post("/", response_model=EventOut)
 async def create_event(data: EventCreateIn, session: AsyncSession = Depends(get_session),
                        user=Depends(role_required("company"))):
@@ -58,3 +79,10 @@ async def create_event(data: EventCreateIn, session: AsyncSession = Depends(get_
         format=e.format,
         media_id=e.media_id,
     )
+
+
+@router.post("/{event_id}/join")
+async def join_event(event_id: str, session: AsyncSession = Depends(get_session), user=Depends(get_current_user)):
+    uc = EventsUseCase(events=EventRepo(session))
+    await uc.join(user.id, event_id)
+    return {"status": "ok"}

@@ -122,6 +122,13 @@ class Event:
 
 
 @dataclass
+class EventParticipant:
+    id: str
+    user_id: str
+    event_id: str
+
+
+@dataclass
 class OTP:
     id: str
     phone: str
