@@ -42,9 +42,11 @@ from app.infrastructure.repos.sql_models import (
     MediaModel,
     ContentMediaModel,
     CompanyMediaModel,
+    ContentSkillModel,
     EventParticipantModel,
     FollowModel,
     CompanyFollowModel,
+    MembershipModel,
     ProfileSkillModel,
     ProfileStatusModel,
     CaseModel,
@@ -73,13 +75,16 @@ async def clear_db_keep_refs() -> None:
     async with engine.begin() as conn:
         # Order matters due to FKs
         for table in [
+            # dependents first
             EventParticipantModel.__table__,
+            ContentSkillModel.__table__,
             ContentMediaModel.__table__,
             CompanyMediaModel.__table__,
-            ProfileSkillModel.__table__,
-            ProfileStatusModel.__table__,
             FollowModel.__table__,
             CompanyFollowModel.__table__,
+            MembershipModel.__table__,
+            ProfileSkillModel.__table__,
+            ProfileStatusModel.__table__,
             StoryModel.__table__,
             CaseModel.__table__,
             ContentModel.__table__,
@@ -354,4 +359,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
