@@ -2,7 +2,6 @@ from typing import Optional, List
 from datetime import datetime
 
 from pydantic import BaseModel
-from app.presentation.schemas.profiles import SphereOut
 
 
 class MediaOut(BaseModel):
@@ -14,11 +13,18 @@ class MediaOut(BaseModel):
     url: str
 
 
+class ContentSphereOut(BaseModel):
+    id: str
+    title: str
+    background_color: str
+    text_color: str
+
+
 class SkillOut(BaseModel):
     id: str
     title: str
     sphere_id: str
-    sphere: Optional[SphereOut] = None
+    sphere: Optional[ContentSphereOut] = None
 
 
 class PostCreateIn(BaseModel):

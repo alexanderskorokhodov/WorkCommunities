@@ -9,8 +9,7 @@ from app.infrastructure.repos.post_repo import PostRepo  # реализуй ка
 from app.infrastructure.repos.story_repo import StoryRepo  # реализуй как прежде
 from app.infrastructure.repos.company_follow_repo import CompanyFollowRepo
 from app.infrastructure.repos.sql_models import ContentModel
-from app.presentation.schemas.content import PostCreateIn, PostUpdateIn, PostOut, StoryCreateIn, StoryOut, MediaOut, SkillOut, ContentItemOut
-from app.presentation.schemas.profiles import SphereOut as SphereOutProfile
+from app.presentation.schemas.content import PostCreateIn, PostUpdateIn, PostOut, StoryCreateIn, StoryOut, MediaOut, SkillOut, ContentItemOut, ContentSphereOut
 from app.usecases.content import ContentUseCase
 
 router = APIRouter()
@@ -52,7 +51,7 @@ async def list_posts(offset: int = 0, limit: int = 20, session: AsyncSession = D
                 title=s.title,
                 sphere_id=s.sphere_id,
                 sphere=(
-                    SphereOutProfile(
+                    ContentSphereOut(
                         id=sp.id,
                         title=sp.title,
                         background_color=sp.background_color,
@@ -100,7 +99,7 @@ async def create_post(data: PostCreateIn, session: AsyncSession = Depends(get_se
             title=s.title,
             sphere_id=s.sphere_id,
             sphere=(
-                SphereOutProfile(
+                ContentSphereOut(
                     id=sp.id,
                     title=sp.title,
                     background_color=sp.background_color,
@@ -134,7 +133,7 @@ async def update_post(post_id: str, data: PostUpdateIn, session: AsyncSession = 
             title=s.title,
             sphere_id=s.sphere_id,
             sphere=(
-                SphereOutProfile(
+                ContentSphereOut(
                     id=sp.id,
                     title=sp.title,
                     background_color=sp.background_color,
@@ -210,7 +209,7 @@ async def list_user_featured_posts(user_id: str, limit: int = 20, session: Async
                 title=s.title,
                 sphere_id=s.sphere_id,
                 sphere=(
-                    SphereOutProfile(
+                    ContentSphereOut(
                         id=sp.id,
                         title=sp.title,
                         background_color=sp.background_color,
@@ -247,7 +246,7 @@ async def list_my_featured_posts(limit: int = 20, session: AsyncSession = Depend
                 title=s.title,
                 sphere_id=s.sphere_id,
                 sphere=(
-                    SphereOutProfile(
+                    ContentSphereOut(
                         id=sp.id,
                         title=sp.title,
                         background_color=sp.background_color,
@@ -284,7 +283,7 @@ async def posts_from_followed_communities(limit: int = 20, session: AsyncSession
                 title=s.title,
                 sphere_id=s.sphere_id,
                 sphere=(
-                    SphereOutProfile(
+                    ContentSphereOut(
                         id=sp.id,
                         title=sp.title,
                         background_color=sp.background_color,
