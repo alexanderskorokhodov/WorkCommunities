@@ -53,6 +53,12 @@ class Follow:
     user_id: str
     community_id: str
 
+@dataclass
+class CompanyFollow:
+    id: str
+    user_id: str
+    company_id: str
+
 
 @dataclass
 class Post:

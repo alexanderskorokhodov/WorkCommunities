@@ -62,6 +62,12 @@ class FollowModel(Base):
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
     community_id: Mapped[str] = mapped_column(ForeignKey("communities.id"), index=True)
 
+class CompanyFollowModel(Base):
+    __tablename__ = "company_follows"
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
+    company_id: Mapped[str] = mapped_column(ForeignKey("companies.id"), index=True)
+
 
 class PostModel(Base):
     __tablename__ = "posts"
