@@ -30,6 +30,8 @@ class ProfileModel(Base):
     full_name: Mapped[str | None] = mapped_column(String)
     city: Mapped[str | None] = mapped_column(String)
     interests: Mapped[str | None] = mapped_column(Text)  # comma-separated
+    portfolio_url: Mapped[str | None] = mapped_column(String)
+    description: Mapped[str | None] = mapped_column(Text)
 
 
 class CompanyModel(Base):
@@ -131,3 +133,41 @@ class StoryModel(Base):
     media_url: Mapped[str] = mapped_column(String)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     media_id: Mapped[str | None] = mapped_column(ForeignKey("media.id"), index=True)  # NEW
+
+
+# NEW — справочники сфер/навыков/статусов и связи профиля
+class SphereModel(Base):
+    __tablename__ = "spheres"
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)  # uid
+    title: Mapped[str] = mapped_column(String)
+    background_color: Mapped[str] = mapped_column(String)  # hex
+    text_color: Mapped[str] = mapped_column(String)  # hex
+
+
+class SkillModel(Base):
+    __tablename__ = "skills"
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)  # uid
+    title: Mapped[str] = mapped_column(String)
+    sphere_id: Mapped[str] = mapped_column(ForeignKey("spheres.id"), index=True)
+
+
+class StatusModel(Base):
+    __tablename__ = "statuses"
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)  # uid
+    title: Mapped[str] = mapped_column(String)
+
+
+class ProfileSkillModel(Base):
+    __tablename__ = "profile_skills"
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)
+    profile_id: Mapped[str] = mapped_column(ForeignKey("profiles.id"), index=True)
+    skill_id: Mapped[str] = mapped_column(ForeignKey("skills.id"), index=True)
+    __table_args__ = (UniqueConstraint("profile_id", "skill_id", name="uq_profile_skill"),)
+
+
+class ProfileStatusModel(Base):
+    __tablename__ = "profile_statuses"
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)
+    profile_id: Mapped[str] = mapped_column(ForeignKey("profiles.id"), index=True)
+    status_id: Mapped[str] = mapped_column(ForeignKey("statuses.id"), index=True)
+    __table_args__ = (UniqueConstraint("profile_id", "status_id", name="uq_profile_status"),)

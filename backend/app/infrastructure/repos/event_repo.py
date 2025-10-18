@@ -34,3 +34,8 @@ class EventRepo(IEventRepo):
         res = await self.s.execute(stmt)
         return [_from_row(r) for r in res.scalars().all()]
 
+    async def create(self, *, community_id: str, title: str, starts_at, city: str | None = None) -> Event:
+        m = EventModel(community_id=community_id, title=title, starts_at=starts_at, city=city)
+        self.s.add(m)
+        await self.s.flush()
+        return _from_row(m)

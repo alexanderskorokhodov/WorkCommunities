@@ -66,7 +66,7 @@ async def get_post(post_id: str, session: AsyncSession = Depends(get_session)):
 
 @router.post("/stories", response_model=StoryOut)
 async def create_story(data: StoryCreateIn, session: AsyncSession = Depends(get_session),
-                       user=Depends(get_current_user)):
+                       user=Depends(role_required("company"))):
     uc = ContentUseCase(posts=PostRepo(session), stories=StoryRepo(session), media=MediaRepo(session))
     try:
         story = await uc.create_story(company_id=data.company_id, title=data.title, media_uid=data.media_uid)

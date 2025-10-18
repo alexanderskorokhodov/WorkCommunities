@@ -13,3 +13,6 @@ class ProfileUseCase:
 
     async def update(self, user_id: str, **data):
         return await self.profiles.update(user_id, **data)
+
+    async def get_or_create_for_user(self, user_id: str):
+        return await self.profiles.get_or_create_for_user(user_id)

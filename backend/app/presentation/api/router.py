@@ -7,6 +7,7 @@ from . import events_endpoints
 from . import companies_endpoints
 from . import communities_endpoints
 from . import admin_endpoints
+from . import profiles_endpoints
 
 api = APIRouter()
 api.include_router(auth_endpoints.router, prefix="/auth", tags=["auth"])
@@ -16,4 +17,5 @@ api.include_router(events_endpoints.router, prefix="/events", tags=["events"])
 api.include_router(companies_endpoints.router, prefix="/companies", tags=["companies"])
 api.include_router(communities_endpoints.router, prefix="/communities", tags=["communities"])
 api.include_router(admin_endpoints.router, prefix="/admin", tags=["admin"])
+api.include_router(profiles_endpoints.router, prefix="/profiles", tags=["profiles"])
 # NOTE: Other endpoints can be wired similarly.

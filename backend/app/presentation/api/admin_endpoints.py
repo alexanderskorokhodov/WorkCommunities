@@ -15,14 +15,14 @@ from app.infrastructure.repos.follow_repo import FollowRepo
 router = APIRouter()
 
 
-@router.post("/companies", response_model=CompanyOut, dependencies=[Depends(role_required("company"))])
+@router.post("/companies", response_model=CompanyOut, dependencies=[Depends(role_required("admin"))])
 async def admin_create_company(data: CompanyCreateIn, session: AsyncSession = Depends(get_session)):
     uc = CompanyUseCase(companies=CompanyRepo(session))
     c = await uc.create(name=data.name, description=data.description)
     return CompanyOut(id=c.id, name=c.name, description=c.description)
 
 
-@router.patch("/companies/{company_id}", response_model=CompanyOut, dependencies=[Depends(role_required("company"))])
+@router.patch("/companies/{company_id}", response_model=CompanyOut, dependencies=[Depends(role_required("admin"))])
 async def admin_update_company(company_id: str, data: CompanyUpdateIn, session: AsyncSession = Depends(get_session)):
     uc = CompanyUseCase(companies=CompanyRepo(session))
     c = await uc.update(company_id, **data.model_dump(exclude_unset=True))
@@ -31,7 +31,7 @@ async def admin_update_company(company_id: str, data: CompanyUpdateIn, session: 
     return CompanyOut(id=c.id, name=c.name, description=c.description)
 
 
-@router.post("/communities", response_model=CommunityOut, dependencies=[Depends(role_required("company"))])
+@router.post("/communities", response_model=CommunityOut, dependencies=[Depends(role_required("admin"))])
 async def admin_create_community(data: CommunityCreateIn, session: AsyncSession = Depends(get_session)):
     uc = CommunityUseCase(communities=CommunityRepo(session), members=MembershipRepo(session), follows=FollowRepo(session))
     c = await uc.create(
@@ -52,7 +52,7 @@ async def admin_create_community(data: CommunityCreateIn, session: AsyncSession 
     )
 
 
-@router.patch("/communities/{community_id}", response_model=CommunityOut, dependencies=[Depends(role_required("company"))])
+@router.patch("/communities/{community_id}", response_model=CommunityOut, dependencies=[Depends(role_required("admin"))])
 async def admin_update_community(community_id: str, data: CommunityUpdateIn, session: AsyncSession = Depends(get_session)):
     uc = CommunityUseCase(communities=CommunityRepo(session), members=MembershipRepo(session), follows=FollowRepo(session))
     c = await uc.update(community_id, **data.model_dump(exclude_unset=True))

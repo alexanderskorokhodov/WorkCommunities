@@ -11,3 +11,9 @@ class EventOut(BaseModel):
     starts_at: datetime
     city: Optional[str] = None
 
+
+class EventCreateIn(BaseModel):
+    community_id: str
+    title: str
+    starts_at: datetime
+    city: Optional[str] = None

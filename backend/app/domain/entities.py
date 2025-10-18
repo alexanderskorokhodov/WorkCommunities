@@ -7,7 +7,7 @@ from typing import Optional
 @dataclass
 class User:
     id: str
-    role: str  # "student" | "company"
+    role: str  # "student" | "company" | "admin"
     phone: Optional[str]
     email: Optional[str]
     password_hash: Optional[str]
@@ -21,6 +21,32 @@ class Profile:
     full_name: Optional[str]
     city: Optional[str]
     interests: list[str]
+    portfolio_url: Optional[str]
+    description: Optional[str]
+    skills: list["Skill"]
+    statuses: list["Status"]
+
+
+@dataclass
+class Sphere:
+    id: str  # uid
+    title: str
+    background_color: str
+    text_color: str
+
+
+@dataclass
+class Skill:
+    id: str  # uid
+    title: str
+    sphere_id: str
+    sphere: Optional[Sphere] = None
+
+
+@dataclass
+class Status:
+    id: str  # uid
+    title: str
 
 
 @dataclass
