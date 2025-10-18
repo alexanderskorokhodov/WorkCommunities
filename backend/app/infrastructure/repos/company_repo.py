@@ -9,7 +9,7 @@ from .sql_models import CompanyModel, CommunityModel, MembershipModel
 
 
 def _from_row(m: CompanyModel) -> Company:
-    return Company(id=m.id, name=m.name, description=m.description)
+    return Company(id=m.id, name=m.name, description=m.description, logo_media_id=m.logo_media_id)
 
 
 class CompanyRepo(ICompanyRepo):

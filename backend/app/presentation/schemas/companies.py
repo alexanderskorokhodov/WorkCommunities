@@ -11,10 +11,11 @@ class CompanyCreateIn(BaseModel):
 class CompanyUpdateIn(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
+    logo_media_id: Optional[str] = None
 
 
 class CompanyOut(BaseModel):
     id: str
     name: str
     description: Optional[str] = None
-
+    logo_media_id: Optional[str] = None

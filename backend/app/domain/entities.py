@@ -54,6 +54,7 @@ class Company:
     id: str
     name: str
     description: Optional[str]
+    logo_media_id: Optional[str] = None
 
 
 @dataclass

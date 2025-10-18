@@ -15,14 +15,14 @@ router = APIRouter()
 async def list_companies(session: AsyncSession = Depends(get_session)):
     repo = CompanyRepo(session)
     companies = await repo.list_all()
-    return [CompanyOut(id=c.id, name=c.name, description=c.description) for c in companies]
+    return [CompanyOut(id=c.id, name=c.name, description=c.description, logo_media_id=c.logo_media_id) for c in companies]
 
 
 @router.get("/me/followed", response_model=list[CompanyOut])
 async def my_followed_companies(session: AsyncSession = Depends(get_session), user=Depends(get_current_user)):
     uc = CompanyUseCase(companies=CompanyRepo(session), company_follows=CompanyFollowRepo(session))
     companies = await uc.list_followed(user.id)
-    return [CompanyOut(id=c.id, name=c.name, description=c.description) for c in companies]
+    return [CompanyOut(id=c.id, name=c.name, description=c.description, logo_media_id=c.logo_media_id) for c in companies]
 
 
 @router.post("/{company_id}/follow")
@@ -44,4 +44,4 @@ async def update_company(company_id: str, data: CompanyUpdateIn, session: AsyncS
                          user=Depends(role_required("company"))):
     uc = CompanyUseCase(companies=CompanyRepo(session))
     c = await uc.update(company_id, **data.model_dump(exclude_unset=True))
-    return CompanyOut(id=c.id, name=c.name, description=c.description)
+    return CompanyOut(id=c.id, name=c.name, description=c.description, logo_media_id=c.logo_media_id)
