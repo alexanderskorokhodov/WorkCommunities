@@ -21,8 +21,8 @@ class CompanyRepo(ICompanyRepo):
         row = res.scalar_one_or_none()
         return _from_row(row) if row else None
 
-    async def create(self, *, name: str, description: str | None = None) -> Company:
-        m = CompanyModel(name=name, description=description)
+    async def create(self, *, name: str, description: str | None = None, owner_user_id: str | None = None) -> Company:
+        m = CompanyModel(name=name, description=description, owner_user_id=owner_user_id)
         self.s.add(m)
         await self.s.flush()
         return _from_row(m)
@@ -46,3 +46,8 @@ class CompanyRepo(ICompanyRepo):
     async def list_all(self) -> Sequence[Company]:
         res = await self.s.execute(select(CompanyModel))
         return [_from_row(r) for r in res.scalars().all()]
+
+    async def get_by_owner(self, user_id: str) -> Optional[Company]:
+        res = await self.s.execute(select(CompanyModel).where(CompanyModel.owner_user_id == user_id))
+        row = res.scalar_one_or_none()
+        return _from_row(row) if row else None

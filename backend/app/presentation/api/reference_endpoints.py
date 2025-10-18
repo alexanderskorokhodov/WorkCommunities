@@ -1,6 +1,4 @@
-from typing import Optional
-
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.db import get_session
@@ -23,12 +21,9 @@ async def list_spheres(session: AsyncSession = Depends(get_session)):
 
 
 @router.get("/skills", response_model=list[SkillOut])
-async def list_skills(
-    sphere_id: Optional[str] = Query(default=None),
-    session: AsyncSession = Depends(get_session),
-):
+async def list_skills(session: AsyncSession = Depends(get_session)):
     uc = ReferenceUseCase(refs=ReferenceRepo(session))
-    skills = await uc.list_skills(sphere_id=sphere_id)
+    skills = await uc.list_skills()
     return [
         SkillOut(
             id=sk.id,
@@ -53,4 +48,3 @@ async def list_statuses(session: AsyncSession = Depends(get_session)):
     uc = ReferenceUseCase(refs=ReferenceRepo(session))
     statuses = await uc.list_statuses()
     return [StatusOut(id=st.id, title=st.title) for st in statuses]
-

@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.adapters.db import get_session
 from app.infrastructure.repos.otp_repo import OTPRepo
 from app.infrastructure.repos.user_repo import UserRepo
+from app.infrastructure.repos.company_repo import CompanyRepo
 from app.presentation.schemas.auth import PhoneIn, OTPVerifyIn, TokenOut, CompanySignupIn, CompanyLoginIn, AdminSignupIn, AdminLoginIn
 from app.usecases.auth import AuthUseCase
 
@@ -19,7 +20,7 @@ async def request_otp(data: PhoneIn, session: AsyncSession = Depends(get_session
 
 @router.post("/otp/verify", response_model=TokenOut)
 async def verify_otp(data: OTPVerifyIn, session: AsyncSession = Depends(get_session)):
-    uc = AuthUseCase(users=UserRepo(session), otps=OTPRepo(session))
+    uc = AuthUseCase(users=UserRepo(session), otps=OTPRepo(session), companies=CompanyRepo(session))
     try:
         token = await uc.verify_otp(data.phone, data.code)
     except ValueError:
@@ -29,7 +30,7 @@ async def verify_otp(data: OTPVerifyIn, session: AsyncSession = Depends(get_sess
 
 @router.post("/company/signup", response_model=TokenOut)
 async def company_signup(data: CompanySignupIn, session: AsyncSession = Depends(get_session)):
-    uc = AuthUseCase(users=UserRepo(session), otps=OTPRepo(session))
+    uc = AuthUseCase(users=UserRepo(session), otps=OTPRepo(session), companies=CompanyRepo(session))
     try:
         token = await uc.company_signup(data.email, data.password, data.name)
     except ValueError as e:

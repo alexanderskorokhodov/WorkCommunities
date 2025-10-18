@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.db import get_session
-from app.core.deps import get_current_user, role_required
+from app.core.deps import get_current_user, role_required, get_current_company
 from app.infrastructure.repos.community_repo import CommunityRepo
 from app.infrastructure.repos.follow_repo import FollowRepo
 from app.presentation.schemas.communities import CommunityOut, CommunityCreateIn, CommunityUpdateIn
@@ -47,15 +47,16 @@ async def list_company_communities(company_id: str, session: AsyncSession = Depe
     ]
 
 
-@router.post("/", response_model=CommunityOut, dependencies=[Depends(role_required("company"))])
-async def create_community(data: CommunityCreateIn, session: AsyncSession = Depends(get_session)):
-    # Note: until user->company mapping exists, require explicit company_id
-    if not data.company_id:
-        raise HTTPException(400, "company_id is required")
+@router.post("/", response_model=CommunityOut)
+async def create_community(
+    data: CommunityCreateIn,
+    session: AsyncSession = Depends(get_session),
+    company=Depends(get_current_company),
+):
     uc = CommunityUseCase(communities=CommunityRepo(session), members=None, follows=FollowRepo(session))
     c = await uc.create(
         name=data.name,
-        company_id=data.company_id,
+        company_id=company.id,
         tags=data.tags,
         description=data.description,
         telegram_url=data.telegram_url,

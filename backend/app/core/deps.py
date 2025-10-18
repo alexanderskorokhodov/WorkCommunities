@@ -5,6 +5,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.adapters.db import get_session
 from app.core.config import settings
 from app.infrastructure.repos.user_repo import UserRepo
+from app.infrastructure.repos.company_repo import CompanyRepo
 
 bearer = HTTPBearer(auto_error=False)
 
@@ -36,3 +37,10 @@ def role_required(*roles: str):
         return user
 
     return _checker
+
+
+async def get_current_company(user=Depends(role_required("company")), session=Depends(get_session)):
+    company = await CompanyRepo(session).get_by_owner(user.id)
+    if not company:
+        raise HTTPException(status_code=403, detail="Company is not set for this user")
+    return company

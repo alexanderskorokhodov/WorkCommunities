@@ -39,6 +39,7 @@ class CompanyModel(Base):
     id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)
     name: Mapped[str] = mapped_column(String)
     description: Mapped[str | None] = mapped_column(Text)
+    owner_user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), index=True, nullable=True)
 
 
 class CommunityModel(Base):
