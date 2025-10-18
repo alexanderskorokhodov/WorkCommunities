@@ -40,6 +40,10 @@ async def list_posts(offset: int = 0, limit: int = 20, session: AsyncSession = D
             if m:
                 media = [m]
         body = c.body if c.type == "post" else (c.description or None)
+        # tags parsing from comma-separated string
+        tags = [t.strip() for t in (c.tags or "").split(",") if t.strip()]
+        # skills via PostRepo utility (content_id works for both types)
+        skills = await PostRepo(session).list_skills_for_post(c.id)
         result.append(ContentItemOut(
             id=c.id,
             community_id=c.community_id,
@@ -48,6 +52,10 @@ async def list_posts(offset: int = 0, limit: int = 20, session: AsyncSession = D
             body=body,
             event_date=c.event_date,
             media=[_media_to_out(m) for m in media],
+            tags=tags,
+            skills=[SkillOut(id=s.id, title=s.title, sphere_id=s.sphere_id) for s in skills],
+            cost=c.cost,
+            participant_payout=c.participant_payout,
         ))
     return result
 

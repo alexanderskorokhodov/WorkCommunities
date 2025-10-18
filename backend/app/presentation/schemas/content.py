@@ -60,6 +60,10 @@ class ContentItemOut(BaseModel):
     body: Optional[str] = None
     event_date: Optional[datetime] = None
     media: List[MediaOut] = []
+    tags: List[str] = []
+    skills: List[SkillOut] = []
+    cost: Optional[int] = None
+    participant_payout: Optional[int] = None
 
 
 class StoryCreateIn(BaseModel):
