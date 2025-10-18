@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from pydantic import BaseModel
+from .users import UserOut
 
 
 class CommunityCreateIn(BaseModel):
@@ -26,3 +27,7 @@ class CommunityOut(BaseModel):
     telegram_url: Optional[str] = None
     tags: List[str]
     is_archived: bool
+
+
+class CommunityWithMembersOut(CommunityOut):
+    members: List[UserOut] = []

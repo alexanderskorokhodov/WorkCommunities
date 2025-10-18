@@ -8,9 +8,11 @@ from app.infrastructure.repos.follow_repo import FollowRepo
 from app.infrastructure.repos.company_repo import CompanyRepo
 from app.infrastructure.repos.post_repo import PostRepo
 from app.infrastructure.repos.media_repo import MediaRepo
-from app.presentation.schemas.communities import CommunityOut, CommunityCreateIn, CommunityUpdateIn
+from app.presentation.schemas.communities import CommunityOut, CommunityCreateIn, CommunityUpdateIn, CommunityWithMembersOut
 from app.presentation.schemas.content import PostOut, MediaOut
 from app.usecases.communities import CommunityUseCase
+from app.infrastructure.repos.membership_repo import MembershipRepo
+from app.infrastructure.repos.user_repo import UserRepo
 
 router = APIRouter()
 
@@ -188,3 +190,40 @@ async def list_community_posts(
             media=[_media_to_out(m) for m in media],
         ))
     return result
+
+
+@router.get("/{community_id}", response_model=CommunityWithMembersOut)
+async def get_community(community_id: str, session: AsyncSession = Depends(get_session)):
+    c = await CommunityRepo(session).get(community_id)
+    if not c:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    member_ids = await MembershipRepo(session).list_user_ids_for_community(community_id)
+    users: list = []
+    if member_ids:
+        urepo = UserRepo(session)
+        for uid in member_ids:
+            u = await urepo.get_by_id(uid)
+            if u:
+                users.append(u)
+
+    return CommunityWithMembersOut(
+        id=c.id,
+        company_id=c.company_id,
+        name=c.name,
+        description=c.description,
+        telegram_url=c.telegram_url,
+        tags=c.tags,
+        is_archived=c.is_archived,
+        members=[
+            # Convert domain User to UserOut
+            {
+                "id": u.id,
+                "role": u.role,
+                "phone": u.phone,
+                "email": u.email,
+                "created_at": u.created_at,
+            }
+            for u in users
+        ],
+    )
