@@ -11,6 +11,9 @@ class EventsUseCase:
     async def my_upcoming(self, user_id: str, limit: int = 20):
         return await self.events.list_joined_for_user(user_id, limit)
 
+    async def upcoming_all(self, limit: int = 20):
+        return await self.events.list_all_upcoming(limit)
+
     async def join(self, user_id: str, event_id: str):
         return await self.events.join(user_id, event_id)
 

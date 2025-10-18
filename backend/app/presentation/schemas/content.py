@@ -1,4 +1,5 @@
 from typing import Optional, List
+from datetime import datetime
 
 from pydantic import BaseModel
 
@@ -49,6 +50,16 @@ class PostOut(BaseModel):
     skills: List[SkillOut] = []
     cost: Optional[int] = None
     participant_payout: Optional[int] = None
+
+
+class ContentItemOut(BaseModel):
+    id: str
+    community_id: str
+    type: str  # 'post' | 'event'
+    title: str
+    body: Optional[str] = None
+    event_date: Optional[datetime] = None
+    media: List[MediaOut] = []
 
 
 class StoryCreateIn(BaseModel):

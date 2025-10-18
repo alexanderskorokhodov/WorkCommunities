@@ -62,6 +62,17 @@ class EventRepo(IEventRepo):
         res = await self.s.execute(stmt)
         return [_from_row(r) for r in res.scalars().all()]
 
+    async def list_all_upcoming(self, limit: int = 20) -> Sequence[Event]:
+        now = datetime.utcnow()
+        stmt = (
+            select(ContentModel)
+            .where(ContentModel.type == "event", ContentModel.event_date >= now)
+            .order_by(ContentModel.event_date.asc())
+            .limit(limit)
+        )
+        res = await self.s.execute(stmt)
+        return [_from_row(r) for r in res.scalars().all()]
+
     async def create(
         self,
         *,

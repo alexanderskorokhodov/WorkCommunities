@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.adapters.db import get_session
 from app.core.deps import get_current_user, role_required
@@ -7,7 +8,8 @@ from app.infrastructure.repos.media_repo import MediaRepo
 from app.infrastructure.repos.post_repo import PostRepo  # реализуй как прежде
 from app.infrastructure.repos.story_repo import StoryRepo  # реализуй как прежде
 from app.infrastructure.repos.company_follow_repo import CompanyFollowRepo
-from app.presentation.schemas.content import PostCreateIn, PostUpdateIn, PostOut, StoryCreateIn, StoryOut, MediaOut, SkillOut
+from app.infrastructure.repos.sql_models import ContentModel
+from app.presentation.schemas.content import PostCreateIn, PostUpdateIn, PostOut, StoryCreateIn, StoryOut, MediaOut, SkillOut, ContentItemOut
 from app.usecases.content import ContentUseCase
 
 router = APIRouter()
@@ -18,26 +20,34 @@ def _media_to_out(m) -> MediaOut:
                     size=m.size, url=m.url)
 
 
-@router.get("/posts", response_model=list[PostOut])
+@router.get("/posts", response_model=list[ContentItemOut])
 async def list_posts(offset: int = 0, limit: int = 20, session: AsyncSession = Depends(get_session)):
-    repo = PostRepo(session)
-    posts = await repo.list_all(offset=offset, limit=limit)
+    """Unified feed: posts + events, sorted by created_at desc."""
     media_repo = MediaRepo(session)
-    result: list[PostOut] = []
-    for p in posts:
-        media = await media_repo.list_for_content(p.id)
-        # skills (optional)
-        skills = await PostRepo(session).list_skills_for_post(p.id)
-        result.append(PostOut(
-            id=p.id,
-            community_id=p.community_id,
-            title=p.title,
-            body=p.body,
+    stmt = (
+        select(ContentModel)
+        .order_by(ContentModel.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+    )
+    res = await session.execute(stmt)
+    items = res.scalars().all()
+    result: list[ContentItemOut] = []
+    for c in items:
+        media = await media_repo.list_for_content(c.id)
+        if not media and getattr(c, "media_id", None):
+            m = await media_repo.get(c.media_id)
+            if m:
+                media = [m]
+        body = c.body if c.type == "post" else (c.description or None)
+        result.append(ContentItemOut(
+            id=c.id,
+            community_id=c.community_id,
+            type=c.type,
+            title=c.title,
+            body=body,
+            event_date=c.event_date,
             media=[_media_to_out(m) for m in media],
-            tags=p.tags,
-            skills=[SkillOut(id=s.id, title=s.title, sphere_id=s.sphere_id) for s in skills],
-            cost=p.cost,
-            participant_payout=p.participant_payout,
         ))
     return result
 

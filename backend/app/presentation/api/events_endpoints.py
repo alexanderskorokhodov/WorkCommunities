@@ -11,9 +11,10 @@ router = APIRouter()
 
 
 @router.get("/upcoming", response_model=list[EventOut])
-async def list_upcoming(limit: int = 20, session: AsyncSession = Depends(get_session), user=Depends(get_current_user)):
+async def list_upcoming(limit: int = 20, session: AsyncSession = Depends(get_session)):
+    """Public: list all upcoming events across communities."""
     uc = EventsUseCase(events=EventRepo(session))
-    events = await uc.upcoming_for_user(user.id, limit=limit)
+    events = await uc.upcoming_all(limit=limit)
     return [
         EventOut(
             id=e.id,
