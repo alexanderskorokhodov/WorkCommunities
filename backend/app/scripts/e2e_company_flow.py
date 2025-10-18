@@ -213,6 +213,16 @@ def step_create_story(ctx: Ctx, media_uid: str, verbose: bool) -> None:
     _log(f"OK: story_id={ctx.story_id}")
 
 
+def step_set_community_logo(ctx: Ctx, media_uid: str, verbose: bool) -> None:
+    _log("[6a] Setting community logo...")
+    payload = {"logo_media_id": media_uid}
+    r = patch(ctx.base_url, f"/communities/{ctx.community_id}", json=payload, token=ctx.token, verbose=verbose)
+    if r.status_code != 200:
+        _log(f"WARN: set community logo failed: {r.status_code} {r.text}")
+    else:
+        _log("OK: community logo set")
+
+
 def step_create_event(ctx: Ctx, verbose: bool) -> None:
     _log("[7/7] Creating event for community...")
     starts_at = (dt.datetime.utcnow() + dt.timedelta(days=3)).replace(microsecond=0).isoformat() + "Z"
@@ -276,6 +286,8 @@ def main(argv: list[str]) -> int:
     post_media_uid, story_media_uid = step_upload_media(ctx, verbose=args.verbose)
     step_create_post(ctx, media_uid=post_media_uid, verbose=args.verbose)
     step_create_story(ctx, media_uid=story_media_uid, verbose=args.verbose)
+    # Use story media as logo for demonstration
+    step_set_community_logo(ctx, media_uid=story_media_uid, verbose=args.verbose)
     step_create_event(ctx, verbose=args.verbose)
 
     _log("Done.")
@@ -284,4 +296,3 @@ def main(argv: list[str]) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main(sys.argv[1:]))
-

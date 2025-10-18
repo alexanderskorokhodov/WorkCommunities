@@ -64,6 +64,7 @@ class Community:
     telegram_url: Optional[str]
     tags: list[str]
     is_archived: bool
+    logo_media_id: Optional[str] = None
 
 
 @dataclass

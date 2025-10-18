@@ -44,6 +44,7 @@ async def list_my_communities(
             telegram_url=i.telegram_url,
             tags=i.tags,
             is_archived=i.is_archived,
+            logo_media_id=i.logo_media_id,
         )
         for i in items
     ]
@@ -67,6 +68,7 @@ async def list_joinable_communities(
             telegram_url=i.telegram_url,
             tags=i.tags,
             is_archived=i.is_archived,
+            logo_media_id=i.logo_media_id,
         )
         for i in items
     ]
@@ -84,6 +86,7 @@ async def list_communities(session: AsyncSession = Depends(get_session)):
             telegram_url=i.telegram_url,
             tags=i.tags,
             is_archived=i.is_archived,
+            logo_media_id=i.logo_media_id,
         )
         for i in items
     ]
@@ -120,6 +123,7 @@ async def create_community(
         tags=data.tags,
         description=data.description,
         telegram_url=data.telegram_url,
+        logo_media_id=data.logo_media_id,
     )
     return CommunityOut(
         id=c.id,
@@ -129,6 +133,7 @@ async def create_community(
         telegram_url=c.telegram_url,
         tags=c.tags,
         is_archived=c.is_archived,
+        logo_media_id=c.logo_media_id,
     )
 
 
@@ -146,6 +151,7 @@ async def update_community(community_id: str, data: CommunityUpdateIn, session: 
         telegram_url=c.telegram_url,
         tags=c.tags,
         is_archived=c.is_archived,
+        logo_media_id=c.logo_media_id,
     )
 
 
@@ -215,6 +221,7 @@ async def get_community(community_id: str, session: AsyncSession = Depends(get_s
         telegram_url=c.telegram_url,
         tags=c.tags,
         is_archived=c.is_archived,
+        logo_media_id=c.logo_media_id,
         members=[
             # Convert domain User to UserOut
             {

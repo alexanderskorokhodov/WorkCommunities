@@ -40,6 +40,7 @@ async def admin_create_community(data: CommunityCreateIn, session: AsyncSession 
         tags=data.tags,
         description=data.description,
         telegram_url=data.telegram_url,
+        logo_media_id=data.logo_media_id,
     )
     return CommunityOut(
         id=c.id,
@@ -49,6 +50,7 @@ async def admin_create_community(data: CommunityCreateIn, session: AsyncSession 
         telegram_url=c.telegram_url,
         tags=c.tags,
         is_archived=c.is_archived,
+        logo_media_id=c.logo_media_id,
     )
 
 
@@ -66,4 +68,5 @@ async def admin_update_community(community_id: str, data: CommunityUpdateIn, ses
         telegram_url=c.telegram_url,
         tags=c.tags,
         is_archived=c.is_archived,
+        logo_media_id=c.logo_media_id,
     )

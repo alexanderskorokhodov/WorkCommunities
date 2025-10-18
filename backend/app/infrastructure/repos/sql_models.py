@@ -52,6 +52,8 @@ class CommunityModel(Base):
     telegram_url: Mapped[str | None] = mapped_column(String)
     tags: Mapped[str | None] = mapped_column(Text)  # comma-separated
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Optional logo similar to companies.logo_media_id
+    logo_media_id: Mapped[str | None] = mapped_column(ForeignKey("media.id"), index=True, nullable=True)
 
 
 class MembershipModel(Base):

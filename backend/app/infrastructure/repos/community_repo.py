@@ -17,6 +17,7 @@ def _from_row(m: CommunityModel) -> Community:
         telegram_url=m.telegram_url,
         tags=(m.tags.split(",") if m.tags else []),
         is_archived=m.is_archived,
+        logo_media_id=m.logo_media_id,
     )
 
 

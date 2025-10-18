@@ -7,13 +7,14 @@ class CommunityUseCase:
         self.members = members
         self.follows = follows
 
-    async def create(self, *, name: str, company_id: str | None, tags: list[str], description: str | None = None, telegram_url: str | None = None):
+    async def create(self, *, name: str, company_id: str | None, tags: list[str], description: str | None = None, telegram_url: str | None = None, logo_media_id: str | None = None):
         return await self.communities.create(
             name=name,
             company_id=company_id,
             tags=tags,
             description=description,
             telegram_url=telegram_url,
+            logo_media_id=logo_media_id,
             is_archived=False,
         )
 

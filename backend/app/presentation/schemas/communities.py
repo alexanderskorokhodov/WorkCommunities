@@ -10,6 +10,7 @@ class CommunityCreateIn(BaseModel):
     tags: List[str] = []
     description: Optional[str] = None
     telegram_url: Optional[str] = None
+    logo_media_id: Optional[str] = None
 
 
 class CommunityUpdateIn(BaseModel):
@@ -17,6 +18,7 @@ class CommunityUpdateIn(BaseModel):
     tags: Optional[List[str]] = None
     description: Optional[str] = None
     telegram_url: Optional[str] = None
+    logo_media_id: Optional[str] = None
 
 
 class CommunityOut(BaseModel):
@@ -27,6 +29,7 @@ class CommunityOut(BaseModel):
     telegram_url: Optional[str] = None
     tags: List[str]
     is_archived: bool
+    logo_media_id: Optional[str] = None
 
 
 class CommunityWithMembersOut(CommunityOut):
