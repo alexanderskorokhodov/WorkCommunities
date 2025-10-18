@@ -59,6 +59,7 @@ from app.infrastructure.repos.company_repo import CompanyRepo
 from app.infrastructure.repos.community_repo import CommunityRepo
 from app.infrastructure.repos.post_repo import PostRepo
 from app.infrastructure.repos.event_repo import EventRepo
+from app.infrastructure.repos.case_repo import CaseRepo
 
 
 def _log(msg: str) -> None:
@@ -226,6 +227,18 @@ async def seed_companies_and_communities(session, media_map: Dict[str, str]) -> 
         c1 = await company_repo.update(c1.id, logo_media_id=media_map["logo1.png"])
     _log(f"Created company: id={c1.id}, name={c1.name}, phone={c1.phone}, logo_media_id={c1.logo_media_id}")
 
+    # Assign tags for АО «Микрон» by skill IDs: Биотех + Хим. инженерия
+    res_sk = await session.execute(select(SkillModel))
+    skills = {s.title: s.id for s in res_sk.scalars().all()}
+    tag_ids = []
+    for t in ["Биотех", "Хим. инженерия"]:
+        sid = skills.get(t)
+        if sid:
+            tag_ids.append(sid)
+    if tag_ids:
+        c1 = await company_repo.update(c1.id, tags=tag_ids)
+        _log(f"Updated company tags for {c1.name}: {c1.tags}")
+
     comm1 = await community_repo.create(
         name="ИИ и встраиваемые системы",
         company_id=c1.id,
@@ -264,6 +277,21 @@ async def seed_companies_and_communities(session, media_map: Dict[str, str]) -> 
         "companies": {"mikron": c1.id, "rpharm": c2.id},
         "communities": {"c1": comm1.id, "c2": comm2.id, "c3": comm3.id},
     }
+
+
+async def seed_cases(session, ids: dict) -> None:
+    """Seed requested case into community 'Проектирование и сборка' (c3)."""
+    case_repo = CaseRepo(session)
+    title = "Умная система управления питанием микрочипа"
+    date = dt.datetime(2025, 10, 17, 0, 0, 0)
+    cs = await case_repo.create(
+        community_id=ids["communities"]["c3"],
+        title=title,
+        description=None,
+        date=date,
+        solutions_count=28,
+    )
+    _log(f"Created case: title={cs.title}, community_id={cs.community_id}, date={cs.date}, solutions_count={cs.solutions_count}")
 
 
 async def seed_post(session, ids: dict, media_map: Dict[str, str]) -> None:
@@ -382,6 +410,8 @@ async def run(base_url: str, media_dir: str) -> None:
         await seed_post(session, ids, media_map)
         # Events
         await seed_events(session, ids, media_map)
+        # Cases
+        await seed_cases(session, ids)
         await session.commit()
     _log("Done: demo data seeded.")
 
