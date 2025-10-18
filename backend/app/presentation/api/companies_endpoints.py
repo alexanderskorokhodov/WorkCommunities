@@ -18,13 +18,6 @@ async def list_companies(session: AsyncSession = Depends(get_session)):
     return [CompanyOut(id=c.id, name=c.name, description=c.description) for c in companies]
 
 
-@router.get("/my", response_model=list[CompanyOut])
-async def my_companies(session: AsyncSession = Depends(get_session), user=Depends(get_current_user)):
-    uc = CompanyUseCase(companies=CompanyRepo(session))
-    companies = await uc.get_companies_for_user(user.id)
-    return [CompanyOut(id=c.id, name=c.name, description=c.description) for c in companies]
-
-
 @router.get("/me/followed", response_model=list[CompanyOut])
 async def my_followed_companies(session: AsyncSession = Depends(get_session), user=Depends(get_current_user)):
     uc = CompanyUseCase(companies=CompanyRepo(session), company_follows=CompanyFollowRepo(session))

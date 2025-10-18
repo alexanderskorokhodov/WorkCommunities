@@ -18,11 +18,17 @@ class OTPRepo(IOTPRepo):
         return m
 
     async def verify(self, phone: str, code: str) -> bool:
+        # Validate against the latest unconsumed OTP for this phone
         res = await self.s.execute(
-            select(OTPModel).where(OTPModel.phone == phone, OTPModel.code == code, OTPModel.consumed == False)
+            select(OTPModel)
+            .where(OTPModel.phone == phone, OTPModel.consumed == False)
+            .order_by(OTPModel.expires_at.desc())
         )
-        row = res.scalar_one_or_none()
-        if not row or row.expires_at < datetime.utcnow():
+        row = res.scalars().first()
+        if not row:
+            return False
+        # Check expiry and code match for the latest issued
+        if row.expires_at < datetime.utcnow() or row.code != code:
             return False
         row.consumed = True
         await self.s.flush()

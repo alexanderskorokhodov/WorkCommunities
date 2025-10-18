@@ -6,7 +6,16 @@ from datetime import datetime
 from sqlalchemy import select
 
 from app.adapters.db import engine, async_session
-from app.infrastructure.repos.sql_models import Base, UserModel, CompanyModel, CommunityModel, PostModel
+from app.infrastructure.repos.sql_models import (
+    Base,
+    UserModel,
+    CompanyModel,
+    CommunityModel,
+    PostModel,
+    StoryModel,
+    MediaModel,
+    EventModel,
+)
 
 
 def _suffix(n: int) -> str:
@@ -90,6 +99,60 @@ async def create_post(community_id: str, author_user_id: str, idx: int) -> PostM
         return p
 
 
+async def create_media(image_idx: int) -> MediaModel:
+    async with async_session() as session:
+        # deterministic id by not exposing; DB will set uid default elsewhere in app, here we rely on COMMIT refresh
+        url = f"/media/mock_{_suffix(image_idx)}.jpg"
+        m = MediaModel(
+            id=f"mock{_suffix(image_idx)}{_suffix(image_idx)}{_suffix(image_idx)}",  # stable uid-like
+            kind="image",
+            mime="image/jpeg",
+            ext="jpg",
+            size=123456,
+            url=url,
+            created_at=datetime.utcnow(),
+        )
+        session.add(m)
+        await session.commit()
+        await session.refresh(m)
+        return m
+
+
+async def create_story(company_id: str, idx: int) -> StoryModel:
+    media = await create_media(idx)
+    async with async_session() as session:
+        s = StoryModel(
+            company_id=company_id,
+            title=f"Сторис {_suffix(idx)}",
+            media_url=media.url,
+            created_at=datetime.utcnow(),
+            media_id=media.id,
+        )
+        session.add(s)
+        await session.commit()
+        await session.refresh(s)
+        return s
+
+
+async def create_event(community_id: str, idx: int) -> EventModel:
+    async with async_session() as session:
+        e = EventModel(
+            community_id=community_id,
+            title=f"Ивент {_suffix(idx)}",
+            starts_at=datetime.utcnow(),
+            city="Москва",
+            location="Онлайн",
+            description="Тестовый ивент с переносами\nи подробным описанием.",
+            registration="https://example.com/register",
+            format="online",
+            media_id=None,
+        )
+        session.add(e)
+        await session.commit()
+        await session.refresh(e)
+        return e
+
+
 async def generate():
     await ensure_tables()
 
@@ -110,7 +173,15 @@ async def generate():
             author = users[(k + pidx) % len(users)]
             await create_post(comm.id, author.id, k * 10 + pidx)
 
-    print("Mock data generated: users, companies, communities, posts.")
+    # Stories per company (2 each) and events per community (2 each)
+    for i, comp in enumerate(companies, start=1):
+        await create_story(comp.id, i * 10 + 1)
+        await create_story(comp.id, i * 10 + 2)
+    for j, comm in enumerate(communities, start=1):
+        await create_event(comm.id, j * 10 + 1)
+        await create_event(comm.id, j * 10 + 2)
+
+    print("Mock data generated: users, companies, communities, posts, stories, events.")
 
 
 def main():
@@ -119,4 +190,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
