@@ -68,3 +68,16 @@ class CommunityRepo(ICommunityRepo):
     async def list_all(self) -> Sequence[Community]:
         res = await self.s.execute(select(CommunityModel).where(CommunityModel.is_archived == False))
         return [_from_row(r) for r in res.scalars().all()]
+
+    async def list_joinable(self, user_id: str, *, offset: int = 0, limit: int = 20) -> Sequence[Community]:
+        # communities not archived and where user is not a member
+        sub_memberships = select(MembershipModel.community_id).where(MembershipModel.user_id == user_id)
+        stmt = (
+            select(CommunityModel)
+            .where(CommunityModel.is_archived == False, ~CommunityModel.id.in_(sub_memberships))
+            .order_by(CommunityModel.name.asc())
+            .offset(offset)
+            .limit(limit)
+        )
+        res = await self.s.execute(stmt)
+        return [_from_row(r) for r in res.scalars().all()]
