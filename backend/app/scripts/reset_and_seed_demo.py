@@ -394,6 +394,12 @@ async def seed_events(session, ids: dict, media_map: Dict[str, str]) -> None:
 
 async def run(base_url: str, media_dir: str) -> None:
     await ensure_tables()
+    # Ensure cases table and columns are compatible with current code
+    # 1) Create table/index if needed; 2) Rename legacy 'points' -> 'solutions_count'
+    from app.scripts.migrate_add_cases_table import _ensure_table_and_index, _migrate_points_to_solutions_count  # type: ignore
+    async with engine.begin() as conn:
+        flavor = await _ensure_table_and_index(conn)
+        await _migrate_points_to_solutions_count(conn, flavor)
     # Lightweight migration to add companies.phone if missing
     await migrate_add_company_phone_column()
     _log("Clearing DB (keeping references)...")
