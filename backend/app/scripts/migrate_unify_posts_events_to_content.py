@@ -20,97 +20,109 @@ from sqlalchemy import text
 from app.adapters.db import engine
 
 
-CREATE_CONTENT_PG = """
-CREATE TABLE IF NOT EXISTS content (
-    id VARCHAR PRIMARY KEY,
-    community_id VARCHAR NOT NULL REFERENCES communities(id),
-    type VARCHAR NOT NULL,
-    title VARCHAR NOT NULL,
-    body TEXT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    event_date TIMESTAMP NULL,
-    city VARCHAR NULL,
-    location VARCHAR NULL,
-    description TEXT NULL,
-    registration VARCHAR NULL,
-    format VARCHAR NULL,
-    media_id VARCHAR NULL REFERENCES media(id),
-    tags TEXT NULL,
-    cost INTEGER NULL,
-    participant_payout INTEGER NULL
-);
-CREATE INDEX IF NOT EXISTS ix_content_type ON content(type);
-CREATE INDEX IF NOT EXISTS ix_content_community ON content(community_id);
-CREATE INDEX IF NOT EXISTS ix_content_event_date ON content(event_date);
-"""
+CREATE_CONTENT_PG_STMTS = [
+    """
+    CREATE TABLE IF NOT EXISTS content (
+        id VARCHAR PRIMARY KEY,
+        community_id VARCHAR NOT NULL REFERENCES communities(id),
+        type VARCHAR NOT NULL,
+        title VARCHAR NOT NULL,
+        body TEXT NULL,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        event_date TIMESTAMP NULL,
+        city VARCHAR NULL,
+        location VARCHAR NULL,
+        description TEXT NULL,
+        registration VARCHAR NULL,
+        format VARCHAR NULL,
+        media_id VARCHAR NULL REFERENCES media(id),
+        tags TEXT NULL,
+        cost INTEGER NULL,
+        participant_payout INTEGER NULL
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS ix_content_type ON content(type)",
+    "CREATE INDEX IF NOT EXISTS ix_content_community ON content(community_id)",
+    "CREATE INDEX IF NOT EXISTS ix_content_event_date ON content(event_date)",
+]
 
-CREATE_CONTENT_SQLITE = """
-CREATE TABLE IF NOT EXISTS content (
-    id TEXT PRIMARY KEY,
-    community_id TEXT NOT NULL,
-    type TEXT NOT NULL,
-    title TEXT NOT NULL,
-    body TEXT NULL,
-    created_at TEXT NOT NULL,
-    event_date TEXT NULL,
-    city TEXT NULL,
-    location TEXT NULL,
-    description TEXT NULL,
-    registration TEXT NULL,
-    format TEXT NULL,
-    media_id TEXT NULL,
-    tags TEXT NULL,
-    cost INTEGER NULL,
-    participant_payout INTEGER NULL
-);
-CREATE INDEX IF NOT EXISTS ix_content_type ON content(type);
-CREATE INDEX IF NOT EXISTS ix_content_community ON content(community_id);
-CREATE INDEX IF NOT EXISTS ix_content_event_date ON content(event_date);
-"""
+CREATE_CONTENT_SQLITE_STMTS = [
+    """
+    CREATE TABLE IF NOT EXISTS content (
+        id TEXT PRIMARY KEY,
+        community_id TEXT NOT NULL,
+        type TEXT NOT NULL,
+        title TEXT NOT NULL,
+        body TEXT NULL,
+        created_at TEXT NOT NULL,
+        event_date TEXT NULL,
+        city TEXT NULL,
+        location TEXT NULL,
+        description TEXT NULL,
+        registration TEXT NULL,
+        format TEXT NULL,
+        media_id TEXT NULL,
+        tags TEXT NULL,
+        cost INTEGER NULL,
+        participant_payout INTEGER NULL
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS ix_content_type ON content(type)",
+    "CREATE INDEX IF NOT EXISTS ix_content_community ON content(community_id)",
+    "CREATE INDEX IF NOT EXISTS ix_content_event_date ON content(event_date)",
+]
 
-CREATE_CONTENT_MEDIA_PG = """
-CREATE TABLE IF NOT EXISTS content_media (
-    id VARCHAR PRIMARY KEY,
-    content_id VARCHAR NOT NULL REFERENCES content(id),
-    media_id VARCHAR NOT NULL REFERENCES media(id),
-    order_index INTEGER NOT NULL DEFAULT 0,
-    CONSTRAINT uq_content_media UNIQUE (content_id, media_id)
-);
-CREATE INDEX IF NOT EXISTS ix_content_media_content ON content_media(content_id);
-CREATE INDEX IF NOT EXISTS ix_content_media_media ON content_media(media_id);
-"""
+CREATE_CONTENT_MEDIA_PG_STMTS = [
+    """
+    CREATE TABLE IF NOT EXISTS content_media (
+        id VARCHAR PRIMARY KEY,
+        content_id VARCHAR NOT NULL REFERENCES content(id),
+        media_id VARCHAR NOT NULL REFERENCES media(id),
+        order_index INTEGER NOT NULL DEFAULT 0,
+        CONSTRAINT uq_content_media UNIQUE (content_id, media_id)
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS ix_content_media_content ON content_media(content_id)",
+    "CREATE INDEX IF NOT EXISTS ix_content_media_media ON content_media(media_id)",
+]
 
-CREATE_CONTENT_MEDIA_SQLITE = """
-CREATE TABLE IF NOT EXISTS content_media (
-    id TEXT PRIMARY KEY,
-    content_id TEXT NOT NULL,
-    media_id TEXT NOT NULL,
-    order_index INTEGER NOT NULL DEFAULT 0
-);
-CREATE INDEX IF NOT EXISTS ix_content_media_content ON content_media(content_id);
-CREATE INDEX IF NOT EXISTS ix_content_media_media ON content_media(media_id);
-"""
+CREATE_CONTENT_MEDIA_SQLITE_STMTS = [
+    """
+    CREATE TABLE IF NOT EXISTS content_media (
+        id TEXT PRIMARY KEY,
+        content_id TEXT NOT NULL,
+        media_id TEXT NOT NULL,
+        order_index INTEGER NOT NULL DEFAULT 0
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS ix_content_media_content ON content_media(content_id)",
+    "CREATE INDEX IF NOT EXISTS ix_content_media_media ON content_media(media_id)",
+]
 
-CREATE_CONTENT_SKILLS_PG = """
-CREATE TABLE IF NOT EXISTS content_skills (
-    id VARCHAR PRIMARY KEY,
-    content_id VARCHAR NOT NULL REFERENCES content(id),
-    skill_id VARCHAR NOT NULL REFERENCES skills(id),
-    CONSTRAINT uq_content_skill UNIQUE (content_id, skill_id)
-);
-CREATE INDEX IF NOT EXISTS ix_content_skills_content ON content_skills(content_id);
-CREATE INDEX IF NOT EXISTS ix_content_skills_skill ON content_skills(skill_id);
-"""
+CREATE_CONTENT_SKILLS_PG_STMTS = [
+    """
+    CREATE TABLE IF NOT EXISTS content_skills (
+        id VARCHAR PRIMARY KEY,
+        content_id VARCHAR NOT NULL REFERENCES content(id),
+        skill_id VARCHAR NOT NULL REFERENCES skills(id),
+        CONSTRAINT uq_content_skill UNIQUE (content_id, skill_id)
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS ix_content_skills_content ON content_skills(content_id)",
+    "CREATE INDEX IF NOT EXISTS ix_content_skills_skill ON content_skills(skill_id)",
+]
 
-CREATE_CONTENT_SKILLS_SQLITE = """
-CREATE TABLE IF NOT EXISTS content_skills (
-    id TEXT PRIMARY KEY,
-    content_id TEXT NOT NULL,
-    skill_id TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS ix_content_skills_content ON content_skills(content_id);
-CREATE INDEX IF NOT EXISTS ix_content_skills_skill ON content_skills(skill_id);
-"""
+CREATE_CONTENT_SKILLS_SQLITE_STMTS = [
+    """
+    CREATE TABLE IF NOT EXISTS content_skills (
+        id TEXT PRIMARY KEY,
+        content_id TEXT NOT NULL,
+        skill_id TEXT NOT NULL
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS ix_content_skills_content ON content_skills(content_id)",
+    "CREATE INDEX IF NOT EXISTS ix_content_skills_skill ON content_skills(skill_id)",
+]
 
 MIGRATE_POSTS_TO_CONTENT_PG = """
 INSERT INTO content (id, community_id, type, title, body, created_at)
@@ -183,18 +195,24 @@ async def main():
     async with engine.begin() as conn:
         dialect = conn.dialect.name
         if dialect.startswith("postgres"):
-            await conn.execute(text(CREATE_CONTENT_PG))
-            await conn.execute(text(CREATE_CONTENT_MEDIA_PG))
-            await conn.execute(text(CREATE_CONTENT_SKILLS_PG))
+            for stmt in CREATE_CONTENT_PG_STMTS:
+                await conn.execute(text(stmt))
+            for stmt in CREATE_CONTENT_MEDIA_PG_STMTS:
+                await conn.execute(text(stmt))
+            for stmt in CREATE_CONTENT_SKILLS_PG_STMTS:
+                await conn.execute(text(stmt))
             await conn.execute(text(MIGRATE_POSTS_TO_CONTENT_PG))
             await conn.execute(text(MIGRATE_EVENTS_TO_CONTENT_PG))
             await conn.execute(text(MIGRATE_POST_MEDIA_TO_CONTENT_MEDIA_PG))
             await conn.execute(text(ALTER_EVENT_PARTICIPANTS_TO_CONTENT_PG))
             print("Unified content migration completed (Postgres)")
         else:
-            await conn.execute(text(CREATE_CONTENT_SQLITE))
-            await conn.execute(text(CREATE_CONTENT_MEDIA_SQLITE))
-            await conn.execute(text(CREATE_CONTENT_SKILLS_SQLITE))
+            for stmt in CREATE_CONTENT_SQLITE_STMTS:
+                await conn.execute(text(stmt))
+            for stmt in CREATE_CONTENT_MEDIA_SQLITE_STMTS:
+                await conn.execute(text(stmt))
+            for stmt in CREATE_CONTENT_SKILLS_SQLITE_STMTS:
+                await conn.execute(text(stmt))
             await conn.execute(text(MIGRATE_POSTS_TO_CONTENT_SQLITE))
             await conn.execute(text(MIGRATE_EVENTS_TO_CONTENT_SQLITE))
             await conn.execute(text(MIGRATE_POST_MEDIA_TO_CONTENT_MEDIA_SQLITE))
@@ -204,4 +222,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-
