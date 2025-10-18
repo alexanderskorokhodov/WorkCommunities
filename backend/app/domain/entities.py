@@ -11,8 +11,8 @@ class User:
     phone: Optional[str]
     email: Optional[str]
     password_hash: Optional[str]
-    avatar_media_id: Optional[str] = None
     created_at: datetime
+    avatar_media_id: Optional[str] = None
 
 
 @dataclass
