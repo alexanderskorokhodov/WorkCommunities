@@ -11,6 +11,24 @@ from app.usecases.communities import CommunityUseCase
 router = APIRouter()
 
 
+@router.get("/", response_model=list[CommunityOut])
+async def list_communities(session: AsyncSession = Depends(get_session)):
+    repo = CommunityRepo(session)
+    items = await repo.list_all()
+    return [
+        CommunityOut(
+            id=i.id,
+            company_id=i.company_id,
+            name=i.name,
+            description=i.description,
+            telegram_url=i.telegram_url,
+            tags=i.tags,
+            is_archived=i.is_archived,
+        )
+        for i in items
+    ]
+
+
 @router.get("/by-company/{company_id}", response_model=list[CommunityOut])
 async def list_company_communities(company_id: str, session: AsyncSession = Depends(get_session)):
     repo = CommunityRepo(session)

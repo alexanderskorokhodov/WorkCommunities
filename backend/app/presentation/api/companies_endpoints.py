@@ -11,6 +11,13 @@ from app.usecases.companies import CompanyUseCase
 router = APIRouter()
 
 
+@router.get("/", response_model=list[CompanyOut])
+async def list_companies(session: AsyncSession = Depends(get_session)):
+    repo = CompanyRepo(session)
+    companies = await repo.list_all()
+    return [CompanyOut(id=c.id, name=c.name, description=c.description) for c in companies]
+
+
 @router.get("/my", response_model=list[CompanyOut])
 async def my_companies(session: AsyncSession = Depends(get_session), user=Depends(get_current_user)):
     uc = CompanyUseCase(companies=CompanyRepo(session))

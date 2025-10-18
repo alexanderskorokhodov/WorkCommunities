@@ -64,3 +64,7 @@ class CommunityRepo(ICommunityRepo):
             select(CommunityModel).where(CommunityModel.company_id == company_id, CommunityModel.is_archived == False)
         )
         return [_from_row(r) for r in res.scalars().all()]
+
+    async def list_all(self) -> Sequence[Community]:
+        res = await self.s.execute(select(CommunityModel).where(CommunityModel.is_archived == False))
+        return [_from_row(r) for r in res.scalars().all()]

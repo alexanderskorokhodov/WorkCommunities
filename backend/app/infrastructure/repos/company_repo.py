@@ -43,3 +43,6 @@ class CompanyRepo(ICompanyRepo):
         res = await self.s.execute(stmt)
         return [_from_row(r) for r in res.scalars().all()]
 
+    async def list_all(self) -> Sequence[Company]:
+        res = await self.s.execute(select(CompanyModel))
+        return [_from_row(r) for r in res.scalars().all()]
