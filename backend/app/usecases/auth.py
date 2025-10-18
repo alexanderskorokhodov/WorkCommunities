@@ -10,8 +10,8 @@ class AuthUseCase:
         self.companies = companies
 
     async def request_otp(self, phone: str) -> None:
-        # code = f"{random.randint(100000, 999999)}"
-        code = "111111"
+        # code = f"{random.randint(10000, 99999)}"  # 5-digit code
+        code = "11111"
         await self.otps.issue(phone, code, settings.OTP_TTL_SECONDS)
 
     async def verify_otp(self, phone: str, code: str) -> str:

@@ -40,6 +40,21 @@ class UserRepo(IUserRepo):
         await self.s.flush()
         return await self.get_by_id(m.id)
 
+    async def list_all(self):
+        res = await self.s.execute(select(UserModel).order_by(UserModel.created_at.desc()))
+        rows = res.scalars().all()
+        return [
+            User(
+                id=m.id,
+                role=m.role,
+                phone=m.phone,
+                email=m.email,
+                password_hash=m.password_hash,
+                created_at=m.created_at,
+            )
+            for m in rows
+        ]
+
     async def create_admin(self, email: str, password_hash: str) -> User:
         m = UserModel(role="admin", email=email, password_hash=password_hash)
         self.s.add(m)

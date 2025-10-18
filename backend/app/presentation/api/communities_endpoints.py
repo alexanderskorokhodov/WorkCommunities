@@ -5,7 +5,10 @@ from app.adapters.db import get_session
 from app.core.deps import get_current_user, role_required, get_current_company
 from app.infrastructure.repos.community_repo import CommunityRepo
 from app.infrastructure.repos.follow_repo import FollowRepo
+from app.infrastructure.repos.post_repo import PostRepo
+from app.infrastructure.repos.media_repo import MediaRepo
 from app.presentation.schemas.communities import CommunityOut, CommunityCreateIn, CommunityUpdateIn
+from app.presentation.schemas.content import PostOut, MediaOut
 from app.usecases.communities import CommunityUseCase
 
 router = APIRouter()
@@ -123,3 +126,32 @@ async def unfollow_community(community_id: str, session: AsyncSession = Depends(
     uc = CommunityUseCase(communities=CommunityRepo(session), members=None, follows=FollowRepo(session))
     await uc.unfollow(user.id, community_id)
     return {"status": "ok"}
+
+
+@router.get("/{community_id}/posts", response_model=list[PostOut])
+async def list_community_posts(
+    community_id: str,
+    offset: int = 0,
+    limit: int = 20,
+    session: AsyncSession = Depends(get_session),
+):
+    posts = await PostRepo(session).list_for_community(community_id, offset=offset, limit=limit)
+    media_repo = MediaRepo(session)
+
+    def _media_to_out(m) -> MediaOut:
+        kind = m.kind.value if hasattr(m.kind, "value") else m.kind
+        return MediaOut(id=m.id, kind=kind, mime=m.mime, ext=m.ext, size=m.size, url=m.url)
+
+    result: list[PostOut] = []
+    for p in posts:
+        media = await media_repo.list_for_post(p.id)
+        result.append(PostOut(
+            id=p.id,
+            community_id=p.community_id,
+            author_user_id=p.author_user_id,
+            title=p.title,
+            body=p.body,
+            featured=p.featured,
+            media=[_media_to_out(m) for m in media],
+        ))
+    return result

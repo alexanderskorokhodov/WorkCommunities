@@ -108,3 +108,13 @@ class PostRepo(IPostRepo):
             .limit(limit)
         )
         return [_to_domain_post(r) for r in res.scalars().all()]
+
+    async def list_for_community(self, community_id: str, *, offset: int = 0, limit: int = 20) -> Sequence[Post]:
+        res = await self.s.execute(
+            select(PostModel)
+            .where(PostModel.community_id == community_id)
+            .order_by(PostModel.created_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        return [_to_domain_post(r) for r in res.scalars().all()]
