@@ -26,9 +26,11 @@ async def upload_media(file: UploadFile = File(...), session: AsyncSession = Dep
     mime = file.content_type or mimetypes.guess_type(file.filename or "")[0] or "application/octet-stream"
     ext = os.path.splitext(file.filename or "")[1].lstrip(".").lower() or None
     uid, url = storage.save(file.file, mime=mime, ext=ext)
-    size = file.spool_max_size or 0  # не всегда корректно — можно os.path.getsize(storage.path_for(uid))
+    # Determine saved file size reliably
+    path = storage.path_for(uid)
+    size = os.path.getsize(path) if os.path.exists(path) else 0
     repo = MediaRepo(session)
-    media = await repo.create(id=uid, kind=_guess_kind(mime), mime=mime, ext=ext, size=size, url=url)
+    media = await repo.create(uid=uid, kind=_guess_kind(mime), mime=mime, ext=ext, size=size, url=url)
     return {
         "id": media.id, "kind": media.kind.value, "mime": media.mime, "ext": media.ext, "size": media.size,
         "url": media.url
