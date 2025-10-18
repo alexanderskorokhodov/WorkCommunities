@@ -13,20 +13,41 @@ class UserRepo(IUserRepo):
     async def get_by_id(self, user_id: str):
         res = await self.s.execute(select(UserModel).where(UserModel.id == user_id))
         m = res.scalar_one_or_none()
-        return None if not m else User(id=m.id, role=m.role, phone=m.phone, email=m.email,
-                                       password_hash=m.password_hash, created_at=m.created_at)
+        return None if not m else User(
+            id=m.id,
+            role=m.role,
+            phone=m.phone,
+            email=m.email,
+            password_hash=m.password_hash,
+            avatar_media_id=m.avatar_media_id,
+            created_at=m.created_at,
+        )
 
     async def get_by_phone(self, phone: str):
         res = await self.s.execute(select(UserModel).where(UserModel.phone == phone))
         m = res.scalar_one_or_none()
-        return None if not m else User(id=m.id, role=m.role, phone=m.phone, email=m.email,
-                                       password_hash=m.password_hash, created_at=m.created_at)
+        return None if not m else User(
+            id=m.id,
+            role=m.role,
+            phone=m.phone,
+            email=m.email,
+            password_hash=m.password_hash,
+            avatar_media_id=m.avatar_media_id,
+            created_at=m.created_at,
+        )
 
     async def get_by_email(self, email: str):
         res = await self.s.execute(select(UserModel).where(UserModel.email == email))
         m = res.scalar_one_or_none()
-        return None if not m else User(id=m.id, role=m.role, phone=m.phone, email=m.email,
-                                       password_hash=m.password_hash, created_at=m.created_at)
+        return None if not m else User(
+            id=m.id,
+            role=m.role,
+            phone=m.phone,
+            email=m.email,
+            password_hash=m.password_hash,
+            avatar_media_id=m.avatar_media_id,
+            created_at=m.created_at,
+        )
 
     async def create_student(self, phone: str) -> User:
         m = UserModel(role="student", phone=phone)
@@ -50,6 +71,7 @@ class UserRepo(IUserRepo):
                 phone=m.phone,
                 email=m.email,
                 password_hash=m.password_hash,
+                avatar_media_id=m.avatar_media_id,
                 created_at=m.created_at,
             )
             for m in rows

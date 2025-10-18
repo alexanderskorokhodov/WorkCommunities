@@ -19,8 +19,8 @@ async def list_users(session: AsyncSession = Depends(get_session)):
             role=u.role,
             phone=u.phone,
             email=u.email,
+            avatar_media_id=u.avatar_media_id,
             created_at=u.created_at,
         )
         for u in users
     ]
-

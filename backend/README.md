@@ -65,7 +65,7 @@ Key endpoints by area (short list)
   - `POST /events/` — create event (auth `company`).
 
 Data model (selected)
-- User: minimal auth context with `id`, `role`, `phone`/`email`.
+- User: minimal auth context with `id`, `role`, `phone`/`email`, optional `avatar_media_id` (FK to media).
 - Company: `id`, `name`, `description`, `logo_media_id` (FK to media), optional `owner_user_id`.
 - Community: belongs to a company, has `name`, `description`, `tags`, `telegram_url`, `is_archived`.
 - Follow: user follows a community. CompanyFollow: user follows a company.
@@ -95,9 +95,24 @@ Auth and roles
   - Adds missing column `communities.logo_media_id` to keep old DBs compatible after adding community logo feature.
   - Idempotent: safe to run multiple times.
   - Run: `docker compose exec api python -m app.scripts.migrate_add_community_logo`
+- `app/scripts/migrate_add_user_avatar.py`
+  - Adds missing column `users.avatar_media_id` to keep old DBs compatible after adding user avatar feature.
+  - Idempotent: safe to run multiple times.
+  - Run: `docker compose exec api python -m app.scripts.migrate_add_user_avatar`
+- `app/scripts/migrate_add_cases_table.py`
+  - Creates `cases` table (community cases with title, description, date, points) if it doesn't exist.
+  - Idempotent: safe to run multiple times.
+  - Run: `docker compose exec api python -m app.scripts.migrate_add_cases_table`
+- `app/scripts/seed_default_cases_for_communities.py`
+  - For each community without cases, creates a default case and assigns a new UID.
+  - Idempotent: only creates missing cases.
+  - Run: `docker compose exec api python -m app.scripts.seed_default_cases_for_communities`
 - `app/scripts/set_default_logos.py`
   - Sets `logo_media_id` for all companies and communities. By default affects only rows where it is NULL; use `--force` to overwrite.
   - Run: `docker compose exec api python -m app.scripts.set_default_logos --logo-id e0bee682aa83422db1463cfbcb4acd73`
+- `app/scripts/set_default_avatars.py`
+  - Sets `avatar_media_id` for all users. By default affects only rows where it is NULL; use `--force` to overwrite.
+  - Run: `docker compose exec api python -m app.scripts.set_default_avatars --avatar-id e0bee682aa83422db1463cfbcb4acd73`
 
 Recommended flow in dev:
 1) Clear DB (destructive). 2) Seed reference data. 3) Generate mock data.
@@ -143,4 +158,5 @@ The generator creates deterministic data with predictable names/keys to simplify
 ## Notes
 - The generator does not create memberships, follows, events, or media; these can be added later if needed.
 - If the DB schema was changed recently, and you already have tables, consider running the clear script (dev only) or use migrations.
-  - For the company logo feature, run the lightweight migration script above to add `logo_media_id` into existing DBs.
+  - For the company/community logo feature, run the lightweight migration scripts above to add `logo_media_id` into existing DBs.
+  - For the user avatar feature, run `migrate_add_user_avatar` and, optionally, `set_default_avatars` to populate a default value for existing users.

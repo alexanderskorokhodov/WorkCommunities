@@ -11,6 +11,7 @@ class User:
     phone: Optional[str]
     email: Optional[str]
     password_hash: Optional[str]
+    avatar_media_id: Optional[str] = None
     created_at: datetime
 
 
@@ -153,3 +154,13 @@ class Media:
     size: int
     url: str  # публичная ссылка /media/{id}
     created_at: datetime
+
+
+@dataclass
+class Case:
+    id: str
+    community_id: str
+    title: str
+    description: Optional[str]
+    date: datetime
+    points: int

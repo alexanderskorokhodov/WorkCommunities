@@ -20,6 +20,8 @@ class UserModel(Base):
     phone: Mapped[str | None] = mapped_column(String, unique=True, nullable=True)
     email: Mapped[str | None] = mapped_column(String, unique=True, nullable=True)
     password_hash: Mapped[str | None] = mapped_column(String, nullable=True)
+    # Optional avatar reference to media table
+    avatar_media_id: Mapped[str | None] = mapped_column(ForeignKey("media.id"), index=True, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 
@@ -188,3 +190,13 @@ class ProfileStatusModel(Base):
     profile_id: Mapped[str] = mapped_column(ForeignKey("profiles.id"), index=True)
     status_id: Mapped[str] = mapped_column(ForeignKey("statuses.id"), index=True)
     __table_args__ = (UniqueConstraint("profile_id", "status_id", name="uq_profile_status"),)
+
+
+class CaseModel(Base):
+    __tablename__ = "cases"
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)
+    community_id: Mapped[str] = mapped_column(ForeignKey("communities.id"), index=True)
+    title: Mapped[str] = mapped_column(String)
+    description: Mapped[str | None] = mapped_column(Text)
+    date: Mapped[datetime] = mapped_column(DateTime)
+    points: Mapped[int] = mapped_column(Integer, default=0)
