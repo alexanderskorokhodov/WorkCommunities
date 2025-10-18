@@ -18,8 +18,8 @@ router = APIRouter()
 @router.post("/companies", response_model=CompanyOut, dependencies=[Depends(role_required("admin"))])
 async def admin_create_company(data: CompanyCreateIn, session: AsyncSession = Depends(get_session)):
     uc = CompanyUseCase(companies=CompanyRepo(session))
-    c = await uc.create(name=data.name, description=data.description)
-    return CompanyOut(id=c.id, name=c.name, description=c.description)
+    c = await uc.create(name=data.name, description=data.description, tags=data.tags)
+    return CompanyOut(id=c.id, name=c.name, description=c.description, tags=c.tags)
 
 
 @router.patch("/companies/{company_id}", response_model=CompanyOut, dependencies=[Depends(role_required("admin"))])
@@ -28,7 +28,7 @@ async def admin_update_company(company_id: str, data: CompanyUpdateIn, session: 
     c = await uc.update(company_id, **data.model_dump(exclude_unset=True))
     if not c:
         raise HTTPException(404, "Not found")
-    return CompanyOut(id=c.id, name=c.name, description=c.description)
+    return CompanyOut(id=c.id, name=c.name, description=c.description, tags=c.tags)
 
 
 @router.post("/communities", response_model=CommunityOut, dependencies=[Depends(role_required("admin"))])

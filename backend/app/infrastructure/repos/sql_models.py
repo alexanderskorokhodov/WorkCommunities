@@ -43,6 +43,7 @@ class CompanyModel(Base):
     description: Mapped[str | None] = mapped_column(Text)
     owner_user_id: Mapped[str | None] = mapped_column(ForeignKey("users.id"), index=True, nullable=True)
     logo_media_id: Mapped[str | None] = mapped_column(ForeignKey("media.id"), index=True, nullable=True)
+    tags: Mapped[str | None] = mapped_column(Text)  # comma-separated
 
 
 class CommunityModel(Base):

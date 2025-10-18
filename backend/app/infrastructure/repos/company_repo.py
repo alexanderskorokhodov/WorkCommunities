@@ -9,7 +9,13 @@ from .sql_models import CompanyModel, CommunityModel, MembershipModel
 
 
 def _from_row(m: CompanyModel) -> Company:
-    return Company(id=m.id, name=m.name, description=m.description, logo_media_id=m.logo_media_id)
+    return Company(
+        id=m.id,
+        name=m.name,
+        description=m.description,
+        logo_media_id=m.logo_media_id,
+        tags=(m.tags.split(",") if m.tags else []),
+    )
 
 
 class CompanyRepo(ICompanyRepo):
@@ -21,13 +27,15 @@ class CompanyRepo(ICompanyRepo):
         row = res.scalar_one_or_none()
         return _from_row(row) if row else None
 
-    async def create(self, *, name: str, description: str | None = None, owner_user_id: str | None = None) -> Company:
-        m = CompanyModel(name=name, description=description, owner_user_id=owner_user_id)
+    async def create(self, *, name: str, description: str | None = None, owner_user_id: str | None = None, tags: list[str] | None = None) -> Company:
+        m = CompanyModel(name=name, description=description, owner_user_id=owner_user_id, tags=",".join(tags) if tags else None)
         self.s.add(m)
         await self.s.flush()
         return _from_row(m)
 
     async def update(self, company_id: str, **data) -> Company:
+        if "tags" in data and data["tags"] is not None:
+            data["tags"] = ",".join(data["tags"]) if data["tags"] else None
         await self.s.execute(update(CompanyModel).where(CompanyModel.id == company_id).values(**data))
         res = await self.s.execute(select(CompanyModel).where(CompanyModel.id == company_id))
         row = res.scalar_one_or_none()

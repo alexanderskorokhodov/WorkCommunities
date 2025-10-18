@@ -6,8 +6,8 @@ class CompanyUseCase:
         self.companies = companies
         self.company_follows = company_follows
 
-    async def create(self, *, name: str, description: str | None = None):
-        return await self.companies.create(name=name, description=description)
+    async def create(self, *, name: str, description: str | None = None, tags: list[str] | None = None):
+        return await self.companies.create(name=name, description=description, tags=tags)
 
     async def update(self, company_id: str, **data):
         return await self.companies.update(company_id, **data)

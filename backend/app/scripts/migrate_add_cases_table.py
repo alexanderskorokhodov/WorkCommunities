@@ -29,8 +29,11 @@ CREATE TABLE IF NOT EXISTS cases (
     description TEXT NULL,
     date TIMESTAMP NOT NULL,
     points INTEGER NOT NULL DEFAULT 0
-);
-CREATE INDEX IF NOT EXISTS ix_cases_community_id ON cases (community_id);
+)
+"""
+
+CREATE_INDEX_SQL_PG = """
+CREATE INDEX IF NOT EXISTS ix_cases_community_id ON cases (community_id)
 """
 
 CREATE_TABLE_SQL_SQLITE = """
@@ -42,8 +45,11 @@ CREATE TABLE IF NOT EXISTS cases (
     date TEXT NOT NULL,
     points INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY(community_id) REFERENCES communities(id)
-);
-CREATE INDEX IF NOT EXISTS ix_cases_community_id ON cases (community_id);
+)
+"""
+
+CREATE_INDEX_SQL_SQLITE = """
+CREATE INDEX IF NOT EXISTS ix_cases_community_id ON cases (community_id)
 """
 
 
@@ -52,12 +58,13 @@ async def main():
         dialect = conn.dialect.name
         if dialect.startswith("postgres"):
             await conn.execute(text(CREATE_TABLE_SQL_PG))
+            await conn.execute(text(CREATE_INDEX_SQL_PG))
             print("Ensured cases table exists (Postgres)")
         else:
             await conn.execute(text(CREATE_TABLE_SQL_SQLITE))
+            await conn.execute(text(CREATE_INDEX_SQL_SQLITE))
             print("Ensured cases table exists (SQLite)")
 
 
 if __name__ == "__main__":
     asyncio.run(main())
-
