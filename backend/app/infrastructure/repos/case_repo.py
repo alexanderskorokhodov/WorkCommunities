@@ -1,6 +1,6 @@
 from typing import Optional, Sequence
 
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities import Case
@@ -37,3 +37,5 @@ class CaseRepo:
         res = await self.s.execute(select(CaseModel).where(CaseModel.community_id == community_id))
         return [_from_row(r) for r in res.scalars().all()]
 
+    async def delete(self, case_id: str) -> None:
+        await self.s.execute(delete(CaseModel).where(CaseModel.id == case_id))

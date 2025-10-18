@@ -7,8 +7,16 @@ from app.infrastructure.repos.community_repo import CommunityRepo
 from app.infrastructure.repos.follow_repo import FollowRepo
 from app.infrastructure.repos.company_repo import CompanyRepo
 from app.infrastructure.repos.post_repo import PostRepo
+from app.infrastructure.repos.case_repo import CaseRepo
 from app.infrastructure.repos.media_repo import MediaRepo
-from app.presentation.schemas.communities import CommunityOut, CommunityCreateIn, CommunityUpdateIn, CommunityWithMembersOut
+from app.presentation.schemas.communities import (
+    CommunityOut,
+    CommunityCreateIn,
+    CommunityUpdateIn,
+    CommunityWithMembersOut,
+    CommunityDetailOut,
+)
+from app.presentation.schemas.cases import CaseOut, CaseCreateIn
 from app.presentation.schemas.content import PostOut, MediaOut
 from app.usecases.communities import CommunityUseCase
 from app.infrastructure.repos.membership_repo import MembershipRepo
@@ -110,6 +118,36 @@ async def list_company_communities(company_id: str, session: AsyncSession = Depe
     ]
 
 
+@router.get("/{community_id}", response_model=CommunityDetailOut)
+async def get_community_detail(community_id: str, session: AsyncSession = Depends(get_session)):
+    c_repo = CommunityRepo(session)
+    community = await c_repo.get(community_id)
+    if not community:
+        raise HTTPException(404, "Not found")
+    cases = await CaseRepo(session).list_for_community(community_id)
+    return CommunityDetailOut(
+        id=community.id,
+        company_id=community.company_id,
+        name=community.name,
+        description=community.description,
+        telegram_url=community.telegram_url,
+        tags=community.tags,
+        is_archived=community.is_archived,
+        logo_media_id=community.logo_media_id,
+        cases=[
+            CaseOut(
+                id=cs.id,
+                community_id=cs.community_id,
+                title=cs.title,
+                description=cs.description,
+                date=cs.date,
+                points=cs.points,
+            )
+            for cs in cases
+        ],
+    )
+
+
 @router.post("/", response_model=CommunityOut)
 async def create_community(
     data: CommunityCreateIn,
@@ -196,6 +234,51 @@ async def list_community_posts(
             media=[_media_to_out(m) for m in media],
         ))
     return result
+
+
+@router.post("/{community_id}/cases", response_model=CaseOut, dependencies=[Depends(role_required("company"))])
+async def create_case(
+    community_id: str,
+    data: CaseCreateIn,
+    session: AsyncSession = Depends(get_session),
+    company=Depends(get_current_company),
+):
+    # ensure community belongs to this company
+    c = await CommunityRepo(session).get(community_id)
+    if not c or c.company_id != company.id:
+        raise HTTPException(status_code=403, detail="Not allowed")
+    cs = await CaseRepo(session).create(
+        community_id=community_id,
+        title=data.title,
+        description=data.description,
+        date=data.date,
+        points=data.points,
+    )
+    return CaseOut(
+        id=cs.id,
+        community_id=cs.community_id,
+        title=cs.title,
+        description=cs.description,
+        date=cs.date,
+        points=cs.points,
+    )
+
+
+@router.delete("/{community_id}/cases/{case_id}", dependencies=[Depends(role_required("company"))])
+async def delete_case(
+    community_id: str,
+    case_id: str,
+    session: AsyncSession = Depends(get_session),
+    company=Depends(get_current_company),
+):
+    c = await CommunityRepo(session).get(community_id)
+    if not c or c.company_id != company.id:
+        raise HTTPException(status_code=403, detail="Not allowed")
+    case = await CaseRepo(session).get_by_id(case_id)
+    if not case or case.community_id != community_id:
+        raise HTTPException(status_code=404, detail="Case not found")
+    await CaseRepo(session).delete(case_id)
+    return {"status": "ok"}
 
 
 @router.get("/{community_id}", response_model=CommunityWithMembersOut)

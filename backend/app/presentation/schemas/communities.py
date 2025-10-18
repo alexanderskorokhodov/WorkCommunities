@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from pydantic import BaseModel
+from .cases import CaseOut
 from .users import UserOut
 
 
@@ -34,3 +35,7 @@ class CommunityOut(BaseModel):
 
 class CommunityWithMembersOut(CommunityOut):
     members: List[UserOut] = []
+
+
+class CommunityDetailOut(CommunityOut):
+    cases: List[CaseOut] = []
