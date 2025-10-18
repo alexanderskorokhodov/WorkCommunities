@@ -43,26 +43,7 @@ class AuthUseCase:
             company_id = c.id
         return create_access_token(subject=user.id, role="company", company_id=company_id)
 
-    async def company_signup(self, email: str, password: str, name: str) -> str:
-        if await self.users.get_by_email(email):
-            raise ValueError("Email already registered")
-        ph = hash_password(password)
-        user = await self.users.create_company(email, ph, name)
-        company_id = None
-        if self.companies:
-            c = await self.companies.create(name=name, owner_user_id=user.id)
-            company_id = c.id
-        return create_access_token(subject=user.id, role="company", company_id=company_id)
-
-    async def company_login(self, email: str, password: str) -> str:
-        user = await self.users.get_by_email(email)
-        if not user or not user.password_hash or not verify_password(password, user.password_hash):
-            raise ValueError("Invalid credentials")
-        company_id = None
-        if self.companies:
-            c = await self.companies.get_by_owner(user.id)
-            company_id = c.id if c else None
-        return create_access_token(subject=user.id, role="company", company_id=company_id)
+    
 
     async def admin_signup(self, email: str, password: str, signup_token: str | None) -> str:
         if not settings.ADMIN_SIGNUP_TOKEN or signup_token != settings.ADMIN_SIGNUP_TOKEN:

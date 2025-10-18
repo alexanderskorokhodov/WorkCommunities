@@ -15,15 +15,7 @@ class TokenOut(BaseModel):
     token_type: str = "bearer"
 
 
-class CompanySignupIn(BaseModel):
-    email: str
-    password: str
-    name: str
-
-
-class CompanyLoginIn(BaseModel):
-    email: str
-    password: str
+ 
 
 
 class AdminSignupIn(BaseModel):

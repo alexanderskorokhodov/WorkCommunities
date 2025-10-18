@@ -2,7 +2,7 @@
 Company flow HTTP script against a running backend instance.
 
 Actions:
-- Company signup (unique email) to obtain bearer token
+- Company auth via OTP to obtain bearer token
 - Create a community (company-scoped)
 - Upload media (multipart)
 - Create a post with media in the community
@@ -14,8 +14,7 @@ Usage:
   python -m app.scripts.e2e_company_flow --base-url http://91.197.99.176:8000
 
 Optional args:
-  --email test+<rand>@example.com
-  --password <random>
+  --phone +7XXXXXXXXXX
   --company-name "Test Company <rand>"
   --verbose
 """
@@ -109,19 +108,32 @@ class Ctx:
     company_name: Optional[str] = None
 
 
-def step_company_signup(ctx: Ctx, email: str, password: str, name: str, verbose: bool) -> None:
-    _log("[1/7] Company signup...")
-    r = post(ctx.base_url, "/auth/company/signup", json={"email": email, "password": password, "name": name}, verbose=verbose)
-    if r.status_code != 200:
-        _log(f"ERROR: signup failed: {r.status_code} {r.text}")
+def step_company_auth_otp(ctx: Ctx, phone: str, desired_name: str, verbose: bool) -> None:
+    _log("[1/7] Company auth via OTP...")
+    r1 = post(ctx.base_url, "/auth/company/otp/request", json={"phone": phone}, verbose=verbose)
+    if r1.status_code not in (200, 204):
+        _log(f"ERROR: OTP request failed: {r1.status_code} {r1.text}")
         sys.exit(1)
-    token = r.json().get("access_token")
+    # In dev, OTP is fixed to 11111
+    r2 = post(ctx.base_url, "/auth/company/otp/verify", json={"phone": phone, "code": "11111"}, verbose=verbose)
+    if r2.status_code != 200:
+        _log(f"ERROR: OTP verify failed: {r2.status_code} {r2.text}")
+        sys.exit(1)
+    token = r2.json().get("access_token")
     if not token:
         _log("ERROR: no access_token returned")
         sys.exit(1)
     ctx.token = token
-    ctx.company_name = name
     _log("OK: received company token")
+
+    # Set company name so we can resolve company id later
+    _log("[1a] Setting company name...")
+    pr = patch(ctx.base_url, "/companies/me", json={"name": desired_name}, token=ctx.token, verbose=verbose)
+    if pr.status_code != 200:
+        _log(f"WARN: failed to set company name: {pr.status_code} {pr.text}")
+    else:
+        ctx.company_name = desired_name
+        _log("OK: company name set")
 
 
 def step_resolve_company_id(ctx: Ctx, verbose: bool) -> None:
@@ -263,23 +275,22 @@ def step_create_event(ctx: Ctx, verbose: bool) -> None:
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description="Company flow HTTP script")
     parser.add_argument("--base-url", default=DEFAULT_BASE_URL, help="Service base URL")
-    parser.add_argument("--email", default=None, help="Company email (default: random @example.com)")
-    parser.add_argument("--password", default=None, help="Password (default: random)")
+    parser.add_argument("--phone", default=None, help="Company phone (E.164, default: random +79...")
     parser.add_argument("--company-name", default=None, help="Company name (default: random)")
     parser.add_argument("--verbose", action="store_true", help="Verbose HTTP logs")
     args = parser.parse_args(argv)
 
-    email = args.email or f"test+{_rand(8)}@example.com"
-    password = args.password or ("A1" + _rand(10))
+    # Generate a plausible random phone if not provided
+    phone = args.phone or ("+79" + "".join(random.choice(string.digits) for _ in range(9)))
     company_name = args.company_name or f"API Test Company {_rand(6)}"
 
     ctx = Ctx(base_url=args.base_url)
 
     _log(f"Base URL: {ctx.base_url}")
-    _log(f"Email: {email}")
+    _log(f"Phone: {phone}")
     _log(f"Company: {company_name}")
 
-    step_company_signup(ctx, email=email, password=password, name=company_name, verbose=args.verbose)
+    step_company_auth_otp(ctx, phone=phone, desired_name=company_name, verbose=args.verbose)
     step_resolve_company_id(ctx, verbose=args.verbose)
     step_create_community(ctx, verbose=args.verbose)
     post_media_uid, story_media_uid = step_upload_media(ctx, verbose=args.verbose)
