@@ -84,3 +84,34 @@ async def get_story(story_id: str, session: AsyncSession = Depends(get_session))
         raise HTTPException(404, "Not found")
     return StoryOut(id=story.id, community_id=story.community_id, title=story.title, media_url=story.media_url,
                     media=_media_to_out(m) if m else None)
+
+
+@router.get("/users/{user_id}/posts/featured", response_model=list[PostOut])
+async def list_user_featured_posts(user_id: str, limit: int = 20, session: AsyncSession = Depends(get_session)):
+    uc = ContentUseCase(posts=PostRepo(session), stories=StoryRepo(session), media=MediaRepo(session))
+    posts = await uc.featured_posts_for_user(user_id=user_id, limit=limit)
+    out: list[PostOut] = []
+    for p in posts:
+        media = await MediaRepo(session).list_for_post(p.id)
+        out.append(PostOut(
+            id=p.id, community_id=p.community_id, author_user_id=p.author_user_id,
+            title=p.title, body=p.body, featured=p.featured,
+            media=[_media_to_out(m) for m in media]
+        ))
+    return out
+
+
+@router.get("/me/posts/featured", response_model=list[PostOut])
+async def list_my_featured_posts(limit: int = 20, session: AsyncSession = Depends(get_session),
+                                 user=Depends(get_current_user)):
+    uc = ContentUseCase(posts=PostRepo(session), stories=StoryRepo(session), media=MediaRepo(session))
+    posts = await uc.featured_posts_for_user(user_id=user.id, limit=limit)
+    out: list[PostOut] = []
+    for p in posts:
+        media = await MediaRepo(session).list_for_post(p.id)
+        out.append(PostOut(
+            id=p.id, community_id=p.community_id, author_user_id=p.author_user_id,
+            title=p.title, body=p.body, featured=p.featured,
+            media=[_media_to_out(m) for m in media]
+        ))
+    return out
