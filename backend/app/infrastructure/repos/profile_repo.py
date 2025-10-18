@@ -127,16 +127,57 @@ class ProfileRepo(IProfileRepo):
             update(ProfileModel).where(ProfileModel.id == prof.id).values(**update_data)
         )
 
-        # replace skills if provided
+        # validate and replace skills if provided
         if skill_uids is not None:
+            # normalize: strip, drop empty, deduplicate keeping order
+            cleaned_skill_uids: list[str] = []
+            seen = set()
+            for sid in (sid or "" for sid in skill_uids):
+                sid = sid.strip()
+                if not sid:
+                    continue
+                if sid not in seen:
+                    cleaned_skill_uids.append(sid)
+                    seen.add(sid)
+
+            if cleaned_skill_uids:
+                # validate existence in skills table
+                sk_res = await self.s.execute(select(SkillModel.id).where(SkillModel.id.in_(cleaned_skill_uids)))
+                found_ids = {row[0] for row in sk_res.all()}
+                missing = [sid for sid in cleaned_skill_uids if sid not in found_ids]
+                if missing:
+                    # do not update if any invalid ids
+                    raise ValueError(f"Invalid skill_uids: {', '.join(missing)}")
+
+            # perform replacement (clear if empty)
             await self.s.execute(delete(ProfileSkillModel).where(ProfileSkillModel.profile_id == prof.id))
-            for sid in skill_uids:
+            for sid in cleaned_skill_uids:
                 self.s.add(ProfileSkillModel(profile_id=prof.id, skill_id=sid))
 
-        # replace statuses if provided
+        # validate and replace statuses if provided
         if status_uids is not None:
+            # normalize: strip, drop empty, deduplicate keeping order
+            cleaned_status_uids: list[str] = []
+            seen_st = set()
+            for stid in (stid or "" for stid in status_uids):
+                stid = stid.strip()
+                if not stid:
+                    continue
+                if stid not in seen_st:
+                    cleaned_status_uids.append(stid)
+                    seen_st.add(stid)
+
+            if cleaned_status_uids:
+                # validate existence in statuses table
+                st_res = await self.s.execute(select(StatusModel.id).where(StatusModel.id.in_(cleaned_status_uids)))
+                found_st = {row[0] for row in st_res.all()}
+                missing_st = [stid for stid in cleaned_status_uids if stid not in found_st]
+                if missing_st:
+                    raise ValueError(f"Invalid status_uids: {', '.join(missing_st)}")
+
+            # perform replacement (clear if empty)
             await self.s.execute(delete(ProfileStatusModel).where(ProfileStatusModel.profile_id == prof.id))
-            for stid in status_uids:
+            for stid in cleaned_status_uids:
                 self.s.add(ProfileStatusModel(profile_id=prof.id, status_id=stid))
 
         await self.s.flush()

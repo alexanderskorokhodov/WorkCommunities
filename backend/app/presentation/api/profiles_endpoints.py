@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.db import get_session
@@ -41,5 +41,9 @@ async def get_my_profile(session: AsyncSession = Depends(get_session), user=Depe
 @router.patch("/me", response_model=ProfileOut)
 async def update_my_profile(data: ProfileUpdateIn, session: AsyncSession = Depends(get_session), user=Depends(get_current_user)):
     uc = ProfileUseCase(profiles=ProfileRepo(session))
-    p = await uc.update(user.id, **data.model_dump(exclude_unset=True))
+    try:
+        p = await uc.update(user.id, **data.model_dump(exclude_unset=True))
+    except ValueError as e:
+        # invalid skill/status ids provided
+        raise HTTPException(status_code=400, detail=str(e))
     return _to_out(p)
