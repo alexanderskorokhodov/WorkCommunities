@@ -164,6 +164,7 @@ async def get_community_detail(community_id: str, session: AsyncSession = Depend
                 "role": u.role,
                 "phone": u.phone,
                 "email": u.email,
+                "avatar_media_id": u.avatar_media_id,
                 "created_at": u.created_at,
             }
             for u in users
