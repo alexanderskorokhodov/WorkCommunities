@@ -50,7 +50,8 @@ class ContentUseCase:
         return await self.posts.list_featured(limit)
 
     async def featured_posts_for_user(self, user_id: str, limit: int = 20):
-        return await self.posts.list_featured_for_user(user_id, limit)
+        # Change semantics per product request: return latest posts by user
+        return await self.posts.list_latest_for_user(user_id, limit)
 
     async def search_posts(self, query: str, limit: int = 20):
         return await self.posts.search(query, limit)

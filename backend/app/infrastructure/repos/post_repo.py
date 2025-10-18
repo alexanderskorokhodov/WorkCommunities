@@ -81,6 +81,15 @@ class PostRepo(IPostRepo):
         )
         return [_to_domain_post(r) for r in res.scalars().all()]
 
+    async def list_latest_for_user(self, user_id: str, limit: int = 20) -> Sequence[Post]:
+        res = await self.s.execute(
+            select(PostModel)
+            .where(PostModel.author_user_id == user_id)
+            .order_by(PostModel.created_at.desc())
+            .limit(limit)
+        )
+        return [_to_domain_post(r) for r in res.scalars().all()]
+
     async def search(self, query: str, limit: int = 20) -> Sequence[Post]:
         q = f"%{query.lower()}%"
         res = await self.s.execute(
