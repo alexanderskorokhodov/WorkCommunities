@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities import Post, Skill
 from app.domain.repositories import IPostRepo
-from app.infrastructure.repos.sql_models import ContentModel, ContentMediaModel, FollowModel, ContentSkillModel, SkillModel
+from app.infrastructure.repos.sql_models import ContentModel, ContentMediaModel, FollowModel, ContentSkillModel, SkillModel, SphereModel
 
 
 def _parse_tags(tags: str | None) -> list[str]:
@@ -181,5 +181,19 @@ class PostRepo(IPostRepo):
             .where(ContentSkillModel.content_id == post_id)
         )
         res = await self.s.execute(stmt)
-        skills = res.scalars().all()
-        return [Skill(id=s.id, title=s.title, sphere_id=s.sphere_id) for s in skills]
+        skill_models = res.scalars().all()
+        # Preload spheres to enrich skills with colors
+        sphere_ids = list({m.sphere_id for m in skill_models})
+        spheres_map: dict[str, dict] = {}
+        if sphere_ids:
+            sp_res = await self.s.execute(select(SphereModel).where(SphereModel.id.in_(sphere_ids)))
+            spheres_map = {sp.id: sp for sp in sp_res.scalars().all()}
+        result: list[Skill] = []
+        for m in skill_models:
+            sphere = None
+            sp = spheres_map.get(m.sphere_id)
+            if sp is not None:
+                from app.domain.entities import Sphere as SphereEntity
+                sphere = SphereEntity(id=sp.id, title=sp.title, background_color=sp.background_color, text_color=sp.text_color)
+            result.append(Skill(id=m.id, title=m.title, sphere_id=m.sphere_id, sphere=sphere))
+        return result
