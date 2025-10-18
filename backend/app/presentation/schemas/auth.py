@@ -24,3 +24,14 @@ class CompanySignupIn(BaseModel):
 class CompanyLoginIn(BaseModel):
     email: str
     password: str
+
+
+class AdminSignupIn(BaseModel):
+    email: str
+    password: str
+    signup_token: str
+
+
+class AdminLoginIn(BaseModel):
+    email: str
+    password: str

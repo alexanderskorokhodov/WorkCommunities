@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "10080"))
     OTP_TTL_SECONDS: int = int(os.getenv("OTP_TTL_SECONDS", "300"))
     ENV: str = os.getenv("ENV", "dev")
+    ADMIN_SIGNUP_TOKEN: str | None = os.getenv("ADMIN_SIGNUP_TOKEN", "admin-secret")
 
     # опционально: автоматически подхватывать .env, игнорить лишние ключи
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")

@@ -39,3 +39,9 @@ class UserRepo(IUserRepo):
         self.s.add(m)
         await self.s.flush()
         return await self.get_by_id(m.id)
+
+    async def create_admin(self, email: str, password_hash: str) -> User:
+        m = UserModel(role="admin", email=email, password_hash=password_hash)
+        self.s.add(m)
+        await self.s.flush()
+        return await self.get_by_id(m.id)

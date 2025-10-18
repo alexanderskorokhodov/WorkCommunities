@@ -35,3 +35,18 @@ class AuthUseCase:
         if not user or not user.password_hash or not verify_password(password, user.password_hash):
             raise ValueError("Invalid credentials")
         return create_access_token(subject=user.id, role="company")
+
+    async def admin_signup(self, email: str, password: str, signup_token: str | None) -> str:
+        if not settings.ADMIN_SIGNUP_TOKEN or signup_token != settings.ADMIN_SIGNUP_TOKEN:
+            raise PermissionError("Forbidden")
+        if await self.users.get_by_email(email):
+            raise ValueError("Email already registered")
+        ph = hash_password(password)
+        user = await self.users.create_admin(email, ph)
+        return create_access_token(subject=user.id, role="admin")
+
+    async def admin_login(self, email: str, password: str) -> str:
+        user = await self.users.get_by_email(email)
+        if not user or user.role != "admin" or not user.password_hash or not verify_password(password, user.password_hash):
+            raise ValueError("Invalid credentials")
+        return create_access_token(subject=user.id, role="admin")
