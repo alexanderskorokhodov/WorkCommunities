@@ -356,7 +356,8 @@ async def seed_events(session, ids: dict, media_map: Dict[str, str]) -> None:
         cost=None,
         participant_payout=None,
     )
-    _log(f"Created event: title={e2.title}, community_id={e2.community_id}, date={e2.event_date}, skills={["Инженерия"] if sk_ids else []}")
+    skills_label = '["Инженерия"]' if sk_ids else "[]"
+    _log(f"Created event: title={e2.title}, community_id={e2.community_id}, date={e2.event_date}, skills={skills_label}")
 
     e3 = await event_repo.create(
         community_id=ids["communities"]["c2"],
@@ -373,7 +374,8 @@ async def seed_events(session, ids: dict, media_map: Dict[str, str]) -> None:
         cost=10,
         participant_payout=None,
     )
-    _log(f"Created event: title={e3.title}, community_id={e3.community_id}, date={e3.event_date}, cost={e3.cost}, skills={["Инженерия"] if sk_ids else []}")
+    skills_label = '["Инженерия"]' if sk_ids else "[]"
+    _log(f"Created event: title={e3.title}, community_id={e3.community_id}, date={e3.event_date}, cost={e3.cost}, skills={skills_label}")
 
     e4 = await event_repo.create(
         community_id=ids["communities"]["c2"],
