@@ -1,6 +1,7 @@
 from typing import Optional
 
 from pydantic import BaseModel
+from .communities import CommunityOut
 
 
 class CompanyCreateIn(BaseModel):
@@ -22,3 +23,7 @@ class CompanyOut(BaseModel):
     description: Optional[str] = None
     logo_media_id: Optional[str] = None
     tags: list[str] = []
+
+
+class CompanyDetailOut(CompanyOut):
+    communities: list[CommunityOut] = []
