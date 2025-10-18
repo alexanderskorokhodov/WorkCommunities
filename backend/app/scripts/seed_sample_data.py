@@ -75,11 +75,10 @@ async def create_community(company_id: str, name: str, description: str | None =
         return c
 
 
-async def create_post(community_id: str, author_user_id: str, title: str, body: str, featured: bool = False,
+async def create_post(community_id: str, title: str, body: str,
                       media_urls: list[str] | None = None):
     async with async_session() as session:
-        p = PostModel(community_id=community_id, author_user_id=author_user_id, title=title, body=body,
-                      featured=featured, created_at=datetime.utcnow())
+        p = PostModel(community_id=community_id, title=title, body=body, created_at=datetime.utcnow())
         session.add(p)
         await session.flush()
 
@@ -132,7 +131,7 @@ async def create_story(company_id: str, title: str, media_url: str):
 async def seed():
     await ensure_tables()
 
-    # Users to author posts
+    # Users
     user_main = await get_or_create_user(role="user", phone="+70000000001", email="user1@example.com")
     user_alt = await get_or_create_user(role="user", phone="+70000000002", email="user2@example.com")
 
@@ -148,34 +147,26 @@ async def seed():
     # Posts with optional media
     await create_post(
         community_id=acme_dev.id,
-        author_user_id=user_main.id,
         title="Новый релиз платформы",
         body="Мы выпустили версию 2.0 с поддержкой async API.",
-        featured=True,
         media_urls=[f"/media/{_uid()}"]
     )
     await create_post(
         community_id=acme_dev.id,
-        author_user_id=user_alt.id,
         title="Гайд по миграции",
         body="Подробности миграции с 1.x на 2.0, чеклист и советы.",
-        featured=False,
         media_urls=[]
     )
     await create_post(
         community_id=acme_design.id,
-        author_user_id=user_main.id,
         title="Новые дизайн-токены",
         body="Добавили поддержку адаптивной типографики и цветовых тем.",
-        featured=False,
         media_urls=[f"/media/{_uid()}", f"/media/{_uid()}"]
     )
     await create_post(
         community_id=globex_marketing.id,
-        author_user_id=user_alt.id,
         title="Growth-инициативы Q4",
-        body="Планируем кампании в соцсетях и партнерства с лидерами мнений.",
-        featured=True
+        body="Планируем кампании в соцсетях и партнерства с лидерами мнений."
     )
 
     # Stories per company
@@ -192,4 +183,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

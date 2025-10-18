@@ -22,18 +22,16 @@ def _media_to_out(m) -> MediaOut:
 async def create_post(data: PostCreateIn, session: AsyncSession = Depends(get_session), user=Depends(role_required("company"))):
     uc = ContentUseCase(posts=PostRepo(session), stories=StoryRepo(session), media=MediaRepo(session))
     post = await uc.create_post(
-        author_user_id=user.id,
         community_id=data.community_id,
         title=data.title,
         body=data.body,
-        featured=data.featured,
         media_uids=data.media_uids or [],
     )
     # собрать media
     media = await MediaRepo(session).list_for_post(post.id)
     return PostOut(
-        id=post.id, community_id=post.community_id, author_user_id=post.author_user_id,
-        title=post.title, body=post.body, featured=post.featured,
+        id=post.id, community_id=post.community_id,
+        title=post.title, body=post.body,
         media=[_media_to_out(m) for m in media]
     )
 
@@ -45,8 +43,8 @@ async def update_post(post_id: str, data: PostUpdateIn, session: AsyncSession = 
     post = await uc.update_post(post_id, **data.model_dump(exclude_unset=True))
     media = await MediaRepo(session).list_for_post(post.id)
     return PostOut(
-        id=post.id, community_id=post.community_id, author_user_id=post.author_user_id,
-        title=post.title, body=post.body, featured=post.featured,
+        id=post.id, community_id=post.community_id,
+        title=post.title, body=post.body,
         media=[_media_to_out(m) for m in media]
     )
 
@@ -58,8 +56,8 @@ async def get_post(post_id: str, session: AsyncSession = Depends(get_session)):
     if not post:
         raise HTTPException(404, "Not found")
     return PostOut(
-        id=post.id, community_id=post.community_id, author_user_id=post.author_user_id,
-        title=post.title, body=post.body, featured=post.featured,
+        id=post.id, community_id=post.community_id,
+        title=post.title, body=post.body,
         media=[_media_to_out(m) for m in media]
     )
 
@@ -95,8 +93,8 @@ async def list_user_featured_posts(user_id: str, limit: int = 20, session: Async
     for p in posts:
         media = await MediaRepo(session).list_for_post(p.id)
         out.append(PostOut(
-            id=p.id, community_id=p.community_id, author_user_id=p.author_user_id,
-            title=p.title, body=p.body, featured=p.featured,
+            id=p.id, community_id=p.community_id,
+            title=p.title, body=p.body,
             media=[_media_to_out(m) for m in media]
         ))
     return out
@@ -111,8 +109,8 @@ async def list_my_featured_posts(limit: int = 20, session: AsyncSession = Depend
     for p in posts:
         media = await MediaRepo(session).list_for_post(p.id)
         out.append(PostOut(
-            id=p.id, community_id=p.community_id, author_user_id=p.author_user_id,
-            title=p.title, body=p.body, featured=p.featured,
+            id=p.id, community_id=p.community_id,
+            title=p.title, body=p.body,
             media=[_media_to_out(m) for m in media]
         ))
     return out
@@ -127,8 +125,8 @@ async def posts_from_followed_communities(limit: int = 20, session: AsyncSession
     for p in posts:
         media = await MediaRepo(session).list_for_post(p.id)
         out.append(PostOut(
-            id=p.id, community_id=p.community_id, author_user_id=p.author_user_id,
-            title=p.title, body=p.body, featured=p.featured,
+            id=p.id, community_id=p.community_id,
+            title=p.title, body=p.body,
             media=[_media_to_out(m) for m in media]
         ))
     return out

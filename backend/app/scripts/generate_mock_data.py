@@ -78,7 +78,7 @@ async def create_community(company_id: str, idx: int) -> CommunityModel:
         return c
 
 
-async def create_post(community_id: str, author_user_id: str, idx: int) -> PostModel:
+async def create_post(community_id: str, idx: int) -> PostModel:
     async with async_session() as session:
         title = f"Пост {_suffix(idx)}"
         body = "\n".join([
@@ -87,10 +87,8 @@ async def create_post(community_id: str, author_user_id: str, idx: int) -> PostM
         ])
         p = PostModel(
             community_id=community_id,
-            author_user_id=author_user_id,
             title=title,
             body=body,
-            featured=bool(idx % 3 == 0),
             created_at=datetime.utcnow(),
         )
         session.add(p)
@@ -168,10 +166,9 @@ async def generate():
 
     # Posts
     for k, comm in enumerate(communities, start=1):
-        # 3 posts per community authored by rotating users
+        # 3 posts per community
         for pidx in range(1, 4):
-            author = users[(k + pidx) % len(users)]
-            await create_post(comm.id, author.id, k * 10 + pidx)
+            await create_post(comm.id, k * 10 + pidx)
 
     # Stories per company (2 each) and events per community (2 each)
     for i, comp in enumerate(companies, start=1):

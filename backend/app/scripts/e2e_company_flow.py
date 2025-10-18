@@ -187,7 +187,6 @@ def step_create_post(ctx: Ctx, media_uid: str, verbose: bool) -> None:
         "community_id": ctx.community_id,
         "title": f"Post {_rand(4)}",
         "body": "Post created via e2e_company_flow",
-        "featured": True,
         "media_uids": [media_uid],
     }
     r = post(ctx.base_url, "/content/posts", json=payload, token=ctx.token, verbose=verbose)

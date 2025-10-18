@@ -13,10 +13,8 @@ def _to_domain_post(m: PostModel) -> Post:
     return Post(
         id=m.id,
         community_id=m.community_id,
-        author_user_id=m.author_user_id,
         title=m.title,
         body=m.body,
-        featured=m.featured,
         created_at=m.created_at,
     )
 
@@ -27,20 +25,16 @@ class PostRepo(IPostRepo):
 
     async def create(
             self,
-            author_user_id: str,
             community_id: str,
             title: str,
             body: str,
             media_ids: list[str] | None = None,
-            featured: bool = False,
     ) -> Post:
         """Создать пост и прикрепить медиа."""
         m = PostModel(
-            author_user_id=author_user_id,
             community_id=community_id,
             title=title,
             body=body,
-            featured=featured,
             created_at=datetime.utcnow(),
         )
         self.s.add(m)
@@ -65,26 +59,31 @@ class PostRepo(IPostRepo):
         return _to_domain_post(row) if row else None
 
     async def list_featured(self, limit: int = 20) -> Sequence[Post]:
+        # Without 'featured' flag, return latest posts as a fallback
         res = await self.s.execute(
-            select(PostModel).where(PostModel.featured == True)
+            select(PostModel)
             .order_by(PostModel.created_at.desc())
             .limit(limit)
         )
         return [_to_domain_post(r) for r in res.scalars().all()]
 
     async def list_featured_for_user(self, user_id: str, limit: int = 20) -> Sequence[Post]:
+        # Fallback: posts from communities the user follows
         res = await self.s.execute(
             select(PostModel)
-            .where(PostModel.featured == True, PostModel.author_user_id == user_id)
+            .join(FollowModel, FollowModel.community_id == PostModel.community_id)
+            .where(FollowModel.user_id == user_id)
             .order_by(PostModel.created_at.desc())
             .limit(limit)
         )
         return [_to_domain_post(r) for r in res.scalars().all()]
 
     async def list_latest_for_user(self, user_id: str, limit: int = 20) -> Sequence[Post]:
+        # Without author linkage, reuse followed communities
         res = await self.s.execute(
             select(PostModel)
-            .where(PostModel.author_user_id == user_id)
+            .join(FollowModel, FollowModel.community_id == PostModel.community_id)
+            .where(FollowModel.user_id == user_id)
             .order_by(PostModel.created_at.desc())
             .limit(limit)
         )

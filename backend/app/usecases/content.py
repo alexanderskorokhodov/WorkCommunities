@@ -8,10 +8,9 @@ class ContentUseCase:
         self.media = media
         self.company_follows = company_follows
 
-    async def create_post(self, *, author_user_id: str, community_id: str, title: str, body: str, featured: bool,
+    async def create_post(self, *, community_id: str, title: str, body: str,
                           media_uids: list[str]):
-        post = await self.posts.create(community_id=community_id, author_user_id=author_user_id, title=title, body=body,
-                                       featured=featured)
+        post = await self.posts.create(community_id=community_id, title=title, body=body)
         if media_uids:
             await self.media.attach_to_post(post.id, media_uids)
         return post

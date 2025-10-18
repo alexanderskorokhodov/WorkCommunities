@@ -251,10 +251,8 @@ async def list_community_posts(
         result.append(PostOut(
             id=p.id,
             community_id=p.community_id,
-            author_user_id=p.author_user_id,
             title=p.title,
             body=p.body,
-            featured=p.featured,
             media=[_media_to_out(m) for m in media],
         ))
     return result

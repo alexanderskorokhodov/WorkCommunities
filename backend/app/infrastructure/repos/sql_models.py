@@ -83,10 +83,8 @@ class PostModel(Base):
     __tablename__ = "posts"
     id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)
     community_id: Mapped[str] = mapped_column(ForeignKey("communities.id"), index=True)
-    author_user_id: Mapped[str] = mapped_column(ForeignKey("users.id"))
     title: Mapped[str] = mapped_column(String)
     body: Mapped[str] = mapped_column(Text)
-    featured: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
 

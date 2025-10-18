@@ -93,10 +93,8 @@ class CompanyFollow:
 class Post:
     id: str
     community_id: str
-    author_user_id: str
     title: str
     body: str
-    featured: bool
     created_at: datetime
 
 

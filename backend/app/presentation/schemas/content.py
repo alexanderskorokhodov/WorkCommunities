@@ -16,24 +16,20 @@ class PostCreateIn(BaseModel):
     community_id: str
     title: str
     body: str
-    featured: bool = False
     media_uids: List[str] = []  # NEW — список uid медиа
 
 
 class PostUpdateIn(BaseModel):
     title: Optional[str] = None
     body: Optional[str] = None
-    featured: Optional[bool] = None
     media_uids: Optional[List[str]] = None  # NEW — можно заменить медиа
 
 
 class PostOut(BaseModel):
     id: str
     community_id: str
-    author_user_id: str
     title: str
     body: str
-    featured: bool
     media: List[MediaOut] = []  # NEW
 
 
