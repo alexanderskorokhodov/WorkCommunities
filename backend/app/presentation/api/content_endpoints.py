@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.adapters.db import get_session
-from app.core.deps import get_current_user
+from app.core.deps import get_current_user, role_required
 from app.infrastructure.repos.media_repo import MediaRepo
 from app.infrastructure.repos.post_repo import PostRepo  # реализуй как прежде
 from app.infrastructure.repos.story_repo import StoryRepo  # реализуй как прежде
@@ -19,7 +19,7 @@ def _media_to_out(m) -> MediaOut:
 
 
 @router.post("/posts", response_model=PostOut)
-async def create_post(data: PostCreateIn, session: AsyncSession = Depends(get_session), user=Depends(get_current_user)):
+async def create_post(data: PostCreateIn, session: AsyncSession = Depends(get_session), user=Depends(role_required("company"))):
     uc = ContentUseCase(posts=PostRepo(session), stories=StoryRepo(session), media=MediaRepo(session))
     post = await uc.create_post(
         author_user_id=user.id,
@@ -40,7 +40,7 @@ async def create_post(data: PostCreateIn, session: AsyncSession = Depends(get_se
 
 @router.patch("/posts/{post_id}", response_model=PostOut)
 async def update_post(post_id: str, data: PostUpdateIn, session: AsyncSession = Depends(get_session),
-                      user=Depends(get_current_user)):
+                      user=Depends(role_required("company"))):
     uc = ContentUseCase(posts=PostRepo(session), stories=StoryRepo(session), media=MediaRepo(session))
     post = await uc.update_post(post_id, **data.model_dump(exclude_unset=True))
     media = await MediaRepo(session).list_for_post(post.id)

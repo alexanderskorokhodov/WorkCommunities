@@ -35,6 +35,8 @@ class Community:
     id: str
     company_id: Optional[str]
     name: str
+    description: Optional[str]
+    telegram_url: Optional[str]
     tags: list[str]
     is_archived: bool
 

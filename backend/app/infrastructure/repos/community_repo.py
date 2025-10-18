@@ -13,6 +13,8 @@ def _from_row(m: CommunityModel) -> Community:
         id=m.id,
         company_id=m.company_id,
         name=m.name,
+        description=m.description,
+        telegram_url=m.telegram_url,
         tags=(m.tags.split(",") if m.tags else []),
         is_archived=m.is_archived,
     )
@@ -62,4 +64,3 @@ class CommunityRepo(ICommunityRepo):
             select(CommunityModel).where(CommunityModel.company_id == company_id, CommunityModel.is_archived == False)
         )
         return [_from_row(r) for r in res.scalars().all()]
-

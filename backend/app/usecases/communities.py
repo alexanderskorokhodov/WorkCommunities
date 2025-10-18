@@ -7,8 +7,15 @@ class CommunityUseCase:
         self.members = members
         self.follows = follows
 
-    async def create(self, *, name: str, company_id: str | None, tags: list[str]):
-        return await self.communities.create(name=name, company_id=company_id, tags=tags, is_archived=False)
+    async def create(self, *, name: str, company_id: str | None, tags: list[str], description: str | None = None, telegram_url: str | None = None):
+        return await self.communities.create(
+            name=name,
+            company_id=company_id,
+            tags=tags,
+            description=description,
+            telegram_url=telegram_url,
+            is_archived=False,
+        )
 
     async def update(self, community_id: str, **data):
         return await self.communities.update(community_id, **data)

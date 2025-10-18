@@ -44,6 +44,8 @@ class CommunityModel(Base):
     id: Mapped[str] = mapped_column(String, primary_key=True, default=uid)
     company_id: Mapped[str | None] = mapped_column(ForeignKey("companies.id"))
     name: Mapped[str] = mapped_column(String, index=True)
+    description: Mapped[str | None] = mapped_column(Text)
+    telegram_url: Mapped[str | None] = mapped_column(String)
     tags: Mapped[str | None] = mapped_column(Text)  # comma-separated
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False)
 
