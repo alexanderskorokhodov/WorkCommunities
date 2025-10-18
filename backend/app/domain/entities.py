@@ -173,4 +173,4 @@ class Case:
     title: str
     description: Optional[str]
     date: datetime
-    points: int
+    solutions_count: int

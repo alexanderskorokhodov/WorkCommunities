@@ -142,6 +142,10 @@ docker compose exec api python -m app.scripts.e2e_company_flow --base-url http:/
 - Загрузка медиа: `POST /media/upload` (multipart form‑data).
 - Компании: `GET /companies`, «моя компания»: `GET /companies/me` (роль `company`).
 - Сообщества: `GET /communities`, посты сообщества: `GET /communities/{id}/posts`.
+- Кейсы сообществ:
+  - Создать кейс (роль `company`): `POST /communities/{id}/cases` с телом `{ title, date, solutions_count, description? }`.
+  - Удалить кейс (роль `company`): `DELETE /communities/{id}/cases/{case_id}`.
+  - Детали сообщества возвращают список кейсов: `GET /communities/{id}` → `cases[]`.
 - Единый фид контента: `GET /content/posts` (посты и события).
 
 ## Структура проекта

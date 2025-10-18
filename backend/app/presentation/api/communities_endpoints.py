@@ -169,7 +169,7 @@ async def get_community_detail(community_id: str, session: AsyncSession = Depend
                 title=cs.title,
                 description=cs.description,
                 date=cs.date,
-                points=cs.points,
+                solutions_count=cs.solutions_count,
             )
             for cs in cases
         ],
@@ -293,7 +293,7 @@ async def create_case(
         title=data.title,
         description=data.description,
         date=data.date,
-        points=data.points,
+        solutions_count=data.solutions_count,
     )
     return CaseOut(
         id=cs.id,
@@ -301,7 +301,7 @@ async def create_case(
         title=cs.title,
         description=cs.description,
         date=cs.date,
-        points=cs.points,
+        solutions_count=cs.solutions_count,
     )
 
 

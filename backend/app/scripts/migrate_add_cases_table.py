@@ -7,7 +7,7 @@ Fields:
 - title (str)
 - description (text, nullable)
 - date (timestamp)
-- points (int, default 0)
+- solutions_count (int, default 0)
 
 Usage (Docker):
   docker compose exec api python -m app.scripts.migrate_add_cases_table
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS cases (
     title VARCHAR NOT NULL,
     description TEXT NULL,
     date TIMESTAMP NOT NULL,
-    points INTEGER NOT NULL DEFAULT 0
+    solutions_count INTEGER NOT NULL DEFAULT 0
 )
 """
 
@@ -43,7 +43,7 @@ CREATE TABLE IF NOT EXISTS cases (
     title TEXT NOT NULL,
     description TEXT NULL,
     date TEXT NOT NULL,
-    points INTEGER NOT NULL DEFAULT 0,
+    solutions_count INTEGER NOT NULL DEFAULT 0,
     FOREIGN KEY(community_id) REFERENCES communities(id)
 )
 """

@@ -14,7 +14,7 @@ def _from_row(m: CaseModel) -> Case:
         title=m.title,
         description=m.description,
         date=m.date,
-        points=m.points,
+        solutions_count=m.solutions_count,
     )
 
 

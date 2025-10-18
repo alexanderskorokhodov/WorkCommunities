@@ -216,4 +216,4 @@ class CaseModel(Base):
     title: Mapped[str] = mapped_column(String)
     description: Mapped[str | None] = mapped_column(Text)
     date: Mapped[datetime] = mapped_column(DateTime)
-    points: Mapped[int] = mapped_column(Integer, default=0)
+    solutions_count: Mapped[int] = mapped_column(Integer, default=0)

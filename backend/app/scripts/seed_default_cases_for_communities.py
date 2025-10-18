@@ -45,7 +45,7 @@ async def seed_defaults():
                 title="Стартовый кейс",
                 description="Автоматически созданный кейс по умолчанию",
                 date=datetime.utcnow(),
-                points=0,
+                solutions_count=0,
             )
             session.add(m)
             created += 1
@@ -61,4 +61,3 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-

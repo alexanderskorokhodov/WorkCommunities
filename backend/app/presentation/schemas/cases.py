@@ -8,7 +8,7 @@ class CaseCreateIn(BaseModel):
     title: str
     description: Optional[str] = None
     date: datetime
-    points: int = 0
+    solutions_count: int = 0
 
 
 class CaseOut(BaseModel):
@@ -17,5 +17,4 @@ class CaseOut(BaseModel):
     title: str
     description: Optional[str] = None
     date: datetime
-    points: int
-
+    solutions_count: int
