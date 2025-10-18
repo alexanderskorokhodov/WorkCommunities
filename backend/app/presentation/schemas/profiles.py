@@ -1,6 +1,8 @@
 from typing import Optional, List
 
 from pydantic import BaseModel, AnyUrl
+from app.presentation.schemas.communities import CommunityOut
+from app.presentation.schemas.events import EventOut
 
 
 class SphereOut(BaseModel):
@@ -29,6 +31,8 @@ class ProfileOut(BaseModel):
     description: Optional[str] = None
     skills: List[SkillOut] = []
     statuses: List[StatusOut] = []
+    communities: List[CommunityOut] = []
+    joined_events: List[EventOut] = []
 
 
 class ProfileUpdateIn(BaseModel):

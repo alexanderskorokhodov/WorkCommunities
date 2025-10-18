@@ -17,6 +17,9 @@ class EventsUseCase:
     async def join(self, user_id: str, event_id: str):
         return await self.events.join(user_id, event_id)
 
+    async def unjoin(self, user_id: str, event_id: str):
+        return await self.events.unjoin(user_id, event_id)
+
     async def create(
         self,
         *,

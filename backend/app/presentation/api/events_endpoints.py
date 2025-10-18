@@ -101,3 +101,10 @@ async def join_event(event_id: str, session: AsyncSession = Depends(get_session)
     uc = EventsUseCase(events=EventRepo(session))
     await uc.join(user.id, event_id)
     return {"status": "ok"}
+
+
+@router.delete("/{event_id}/join")
+async def unjoin_event(event_id: str, session: AsyncSession = Depends(get_session), user=Depends(get_current_user)):
+    uc = EventsUseCase(events=EventRepo(session))
+    await uc.unjoin(user.id, event_id)
+    return {"status": "ok"}

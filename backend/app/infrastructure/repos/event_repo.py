@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.domain.entities import Event, EventParticipant
 from app.domain.repositories import IEventRepo
 from .sql_models import ContentModel, MembershipModel, FollowModel, EventParticipantModel, ContentSkillModel, SkillModel
+from sqlalchemy import delete
 
 
 def _from_row(m: ContentModel) -> Event:
@@ -131,3 +132,10 @@ class EventRepo(IEventRepo):
         self.s.add(m)
         await self.s.flush()
         return EventParticipant(id=m.id, user_id=m.user_id, event_id=m.content_id)
+
+    async def unjoin(self, user_id: str, event_id: str) -> None:
+        await self.s.execute(
+            delete(EventParticipantModel).where(
+                EventParticipantModel.user_id == user_id, EventParticipantModel.content_id == event_id
+            )
+        )

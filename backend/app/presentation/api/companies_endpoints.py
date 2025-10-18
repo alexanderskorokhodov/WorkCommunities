@@ -60,6 +60,39 @@ async def get_company(company_id: str, session: AsyncSession = Depends(get_sessi
     )
 
 
+@router.get("/me", response_model=CompanyDetailOut, dependencies=[Depends(role_required("company"))])
+async def get_my_company(session: AsyncSession = Depends(get_session), company=Depends(get_current_company)):
+    # Build the same detailed payload as for GET /companies/{company_id}
+    comm_repo = CommunityRepo(session)
+    communities = await comm_repo.list_for_company(company.id)
+    counts = await MembershipRepo(session).counts_for_communities([c.id for c in communities])
+    media_repo = MediaRepo(session)
+    media = await media_repo.list_for_company(company.id)
+
+    return CompanyDetailOut(
+        id=company.id,
+        name=company.name,
+        description=company.description,
+        logo_media_id=company.logo_media_id,
+        tags=company.tags,
+        media=[MediaOut(id=m.id, kind=m.kind.value if hasattr(m.kind, "value") else m.kind, mime=m.mime, ext=m.ext, size=m.size, url=m.url) for m in media],
+        communities=[
+            CommunityOut(
+                id=i.id,
+                company_id=i.company_id,
+                name=i.name,
+                description=i.description,
+                telegram_url=i.telegram_url,
+                tags=i.tags,
+                is_archived=i.is_archived,
+                logo_media_id=i.logo_media_id,
+                members_count=counts.get(i.id, 0),
+            )
+            for i in communities
+        ],
+    )
+
+
 @router.get("/me/followed", response_model=list[CompanyOut])
 async def my_followed_companies(session: AsyncSession = Depends(get_session), user=Depends(get_current_user)):
     uc = CompanyUseCase(companies=CompanyRepo(session), company_follows=CompanyFollowRepo(session))
