@@ -39,3 +39,5 @@ class CommunityWithMembersOut(CommunityOut):
 
 class CommunityDetailOut(CommunityOut):
     cases: List[CaseOut] = []
+    # Include members alongside cases for community detail endpoint
+    members: List[UserOut] = []

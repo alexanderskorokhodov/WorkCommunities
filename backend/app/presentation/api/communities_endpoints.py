@@ -124,7 +124,20 @@ async def get_community_detail(community_id: str, session: AsyncSession = Depend
     community = await c_repo.get(community_id)
     if not community:
         raise HTTPException(404, "Not found")
+
+    # Cases
     cases = await CaseRepo(session).list_for_community(community_id)
+
+    # Members
+    member_ids = await MembershipRepo(session).list_user_ids_for_community(community_id)
+    users: list = []
+    if member_ids:
+        urepo = UserRepo(session)
+        for uid in member_ids:
+            u = await urepo.get_by_id(uid)
+            if u:
+                users.append(u)
+
     return CommunityDetailOut(
         id=community.id,
         company_id=community.company_id,
@@ -144,6 +157,16 @@ async def get_community_detail(community_id: str, session: AsyncSession = Depend
                 points=cs.points,
             )
             for cs in cases
+        ],
+        members=[
+            {
+                "id": u.id,
+                "role": u.role,
+                "phone": u.phone,
+                "email": u.email,
+                "created_at": u.created_at,
+            }
+            for u in users
         ],
     )
 
@@ -281,39 +304,4 @@ async def delete_case(
     return {"status": "ok"}
 
 
-@router.get("/{community_id}", response_model=CommunityWithMembersOut)
-async def get_community(community_id: str, session: AsyncSession = Depends(get_session)):
-    c = await CommunityRepo(session).get(community_id)
-    if not c:
-        raise HTTPException(status_code=404, detail="Not found")
-
-    member_ids = await MembershipRepo(session).list_user_ids_for_community(community_id)
-    users: list = []
-    if member_ids:
-        urepo = UserRepo(session)
-        for uid in member_ids:
-            u = await urepo.get_by_id(uid)
-            if u:
-                users.append(u)
-
-    return CommunityWithMembersOut(
-        id=c.id,
-        company_id=c.company_id,
-        name=c.name,
-        description=c.description,
-        telegram_url=c.telegram_url,
-        tags=c.tags,
-        is_archived=c.is_archived,
-        logo_media_id=c.logo_media_id,
-        members=[
-            # Convert domain User to UserOut
-            {
-                "id": u.id,
-                "role": u.role,
-                "phone": u.phone,
-                "email": u.email,
-                "created_at": u.created_at,
-            }
-            for u in users
-        ],
-    )
+# Removed duplicate GET /{community_id} that previously returned members-only
