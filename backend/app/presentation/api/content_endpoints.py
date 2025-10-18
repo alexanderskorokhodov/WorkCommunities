@@ -10,6 +10,7 @@ from app.infrastructure.repos.story_repo import StoryRepo  # реализуй к
 from app.infrastructure.repos.company_follow_repo import CompanyFollowRepo
 from app.infrastructure.repos.sql_models import ContentModel
 from app.presentation.schemas.content import PostCreateIn, PostUpdateIn, PostOut, StoryCreateIn, StoryOut, MediaOut, SkillOut, ContentItemOut
+from app.presentation.schemas.profiles import SphereOut as SphereOutProfile
 from app.usecases.content import ContentUseCase
 
 router = APIRouter()
@@ -44,6 +45,22 @@ async def list_posts(offset: int = 0, limit: int = 20, session: AsyncSession = D
         tags = [t.strip() for t in (c.tags or "").split(",") if t.strip()]
         # skills via PostRepo utility (content_id works for both types)
         skills = await PostRepo(session).list_skills_for_post(c.id)
+        def _skill_to_out(s) -> SkillOut:
+            sp = getattr(s, "sphere", None)
+            return SkillOut(
+                id=s.id,
+                title=s.title,
+                sphere_id=s.sphere_id,
+                sphere=(
+                    SphereOutProfile(
+                        id=sp.id,
+                        title=sp.title,
+                        background_color=sp.background_color,
+                        text_color=sp.text_color,
+                    ) if sp else None
+                ),
+            )
+
         result.append(ContentItemOut(
             id=c.id,
             community_id=c.community_id,
@@ -53,7 +70,7 @@ async def list_posts(offset: int = 0, limit: int = 20, session: AsyncSession = D
             event_date=c.event_date,
             media=[_media_to_out(m) for m in media],
             tags=tags,
-            skills=[SkillOut(id=s.id, title=s.title, sphere_id=s.sphere_id) for s in skills],
+            skills=[_skill_to_out(s) for s in skills],
             cost=c.cost,
             participant_payout=c.participant_payout,
         ))
@@ -76,12 +93,28 @@ async def create_post(data: PostCreateIn, session: AsyncSession = Depends(get_se
     # собрать media
     media = await MediaRepo(session).list_for_content(post.id)
     skills = await PostRepo(session).list_skills_for_post(post.id)
+    def _skill_to_out(s) -> SkillOut:
+        sp = getattr(s, "sphere", None)
+        return SkillOut(
+            id=s.id,
+            title=s.title,
+            sphere_id=s.sphere_id,
+            sphere=(
+                SphereOutProfile(
+                    id=sp.id,
+                    title=sp.title,
+                    background_color=sp.background_color,
+                    text_color=sp.text_color,
+                ) if sp else None
+            ),
+        )
+
     return PostOut(
         id=post.id, community_id=post.community_id,
         title=post.title, body=post.body,
         media=[_media_to_out(m) for m in media],
         tags=post.tags,
-        skills=[SkillOut(id=s.id, title=s.title, sphere_id=s.sphere_id) for s in skills],
+        skills=[_skill_to_out(s) for s in skills],
         cost=post.cost,
         participant_payout=post.participant_payout,
     )
@@ -94,12 +127,28 @@ async def update_post(post_id: str, data: PostUpdateIn, session: AsyncSession = 
     post = await uc.update_post(post_id, **data.model_dump(exclude_unset=True))
     media = await MediaRepo(session).list_for_content(post.id)
     skills = await PostRepo(session).list_skills_for_post(post.id)
+    def _skill_to_out(s) -> SkillOut:
+        sp = getattr(s, "sphere", None)
+        return SkillOut(
+            id=s.id,
+            title=s.title,
+            sphere_id=s.sphere_id,
+            sphere=(
+                SphereOutProfile(
+                    id=sp.id,
+                    title=sp.title,
+                    background_color=sp.background_color,
+                    text_color=sp.text_color,
+                ) if sp else None
+            ),
+        )
+
     return PostOut(
         id=post.id, community_id=post.community_id,
         title=post.title, body=post.body,
         media=[_media_to_out(m) for m in media],
         tags=post.tags,
-        skills=[SkillOut(id=s.id, title=s.title, sphere_id=s.sphere_id) for s in skills],
+        skills=[_skill_to_out(s) for s in skills],
         cost=post.cost,
         participant_payout=post.participant_payout,
     )
@@ -154,12 +203,28 @@ async def list_user_featured_posts(user_id: str, limit: int = 20, session: Async
     for p in posts:
         media = await MediaRepo(session).list_for_content(p.id)
         skills = await PostRepo(session).list_skills_for_post(p.id)
+        def _skill_to_out(s) -> SkillOut:
+            sp = getattr(s, "sphere", None)
+            return SkillOut(
+                id=s.id,
+                title=s.title,
+                sphere_id=s.sphere_id,
+                sphere=(
+                    SphereOutProfile(
+                        id=sp.id,
+                        title=sp.title,
+                        background_color=sp.background_color,
+                        text_color=sp.text_color,
+                    ) if sp else None
+                ),
+            )
+
         out.append(PostOut(
             id=p.id, community_id=p.community_id,
             title=p.title, body=p.body,
             media=[_media_to_out(m) for m in media],
             tags=p.tags,
-            skills=[SkillOut(id=s.id, title=s.title, sphere_id=s.sphere_id) for s in skills],
+            skills=[_skill_to_out(s) for s in skills],
             cost=p.cost,
             participant_payout=p.participant_payout,
         ))
@@ -175,12 +240,28 @@ async def list_my_featured_posts(limit: int = 20, session: AsyncSession = Depend
     for p in posts:
         media = await MediaRepo(session).list_for_content(p.id)
         skills = await PostRepo(session).list_skills_for_post(p.id)
+        def _skill_to_out(s) -> SkillOut:
+            sp = getattr(s, "sphere", None)
+            return SkillOut(
+                id=s.id,
+                title=s.title,
+                sphere_id=s.sphere_id,
+                sphere=(
+                    SphereOutProfile(
+                        id=sp.id,
+                        title=sp.title,
+                        background_color=sp.background_color,
+                        text_color=sp.text_color,
+                    ) if sp else None
+                ),
+            )
+
         out.append(PostOut(
             id=p.id, community_id=p.community_id,
             title=p.title, body=p.body,
             media=[_media_to_out(m) for m in media],
             tags=p.tags,
-            skills=[SkillOut(id=s.id, title=s.title, sphere_id=s.sphere_id) for s in skills],
+            skills=[_skill_to_out(s) for s in skills],
             cost=p.cost,
             participant_payout=p.participant_payout,
         ))
@@ -196,12 +277,28 @@ async def posts_from_followed_communities(limit: int = 20, session: AsyncSession
     for p in posts:
         media = await MediaRepo(session).list_for_content(p.id)
         skills = await PostRepo(session).list_skills_for_post(p.id)
+        def _skill_to_out(s) -> SkillOut:
+            sp = getattr(s, "sphere", None)
+            return SkillOut(
+                id=s.id,
+                title=s.title,
+                sphere_id=s.sphere_id,
+                sphere=(
+                    SphereOutProfile(
+                        id=sp.id,
+                        title=sp.title,
+                        background_color=sp.background_color,
+                        text_color=sp.text_color,
+                    ) if sp else None
+                ),
+            )
+
         out.append(PostOut(
             id=p.id, community_id=p.community_id,
             title=p.title, body=p.body,
             media=[_media_to_out(m) for m in media],
             tags=p.tags,
-            skills=[SkillOut(id=s.id, title=s.title, sphere_id=s.sphere_id) for s in skills],
+            skills=[_skill_to_out(s) for s in skills],
             cost=p.cost,
             participant_payout=p.participant_payout,
         ))
