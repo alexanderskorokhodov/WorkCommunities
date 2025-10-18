@@ -104,6 +104,9 @@ async def list_communities(session: AsyncSession = Depends(get_session)):
 async def list_company_communities(company_id: str, session: AsyncSession = Depends(get_session)):
     repo = CommunityRepo(session)
     items = await repo.list_for_company(company_id)
+    # Compute members count per community
+    ids = [i.id for i in items]
+    counts = await MembershipRepo(session).counts_for_communities(ids)
     return [
         CommunityOut(
             id=i.id,
@@ -113,6 +116,8 @@ async def list_company_communities(company_id: str, session: AsyncSession = Depe
             telegram_url=i.telegram_url,
             tags=i.tags,
             is_archived=i.is_archived,
+            logo_media_id=i.logo_media_id,
+            members_count=counts.get(i.id, 0),
         )
         for i in items
     ]

@@ -6,6 +6,7 @@ from app.core.deps import get_current_user, role_required, get_current_company
 from app.infrastructure.repos.company_repo import CompanyRepo
 from app.infrastructure.repos.community_repo import CommunityRepo
 from app.infrastructure.repos.company_follow_repo import CompanyFollowRepo
+from app.infrastructure.repos.membership_repo import MembershipRepo
 from app.infrastructure.repos.media_repo import MediaRepo
 from app.presentation.schemas.companies import CompanyOut, CompanyUpdateIn, CompanyDetailOut
 from app.presentation.schemas.content import MediaOut
@@ -31,6 +32,7 @@ async def get_company(company_id: str, session: AsyncSession = Depends(get_sessi
 
     comm_repo = CommunityRepo(session)
     communities = await comm_repo.list_for_company(company_id)
+    counts = await MembershipRepo(session).counts_for_communities([c.id for c in communities])
     media_repo = MediaRepo(session)
     media = await media_repo.list_for_company(company_id)
 
@@ -51,6 +53,7 @@ async def get_company(company_id: str, session: AsyncSession = Depends(get_sessi
                 tags=i.tags,
                 is_archived=i.is_archived,
                 logo_media_id=i.logo_media_id,
+                members_count=counts.get(i.id, 0),
             )
             for i in communities
         ],

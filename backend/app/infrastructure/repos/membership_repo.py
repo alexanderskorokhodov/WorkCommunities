@@ -1,10 +1,9 @@
-from sqlalchemy import delete
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.entities import Membership
 from app.domain.repositories import IMembershipRepo
 from .sql_models import MembershipModel
-from sqlalchemy import select
 
 
 def _from_row(m: MembershipModel) -> Membership:
@@ -30,3 +29,15 @@ class MembershipRepo(IMembershipRepo):
         res = await self.s.execute(select(MembershipModel.user_id).where(MembershipModel.community_id == community_id))
         rows = res.scalars().all()
         return list(rows)
+
+    async def counts_for_communities(self, community_ids: list[str]) -> dict[str, int]:
+        if not community_ids:
+            return {}
+        stmt = (
+            select(MembershipModel.community_id, func.count(MembershipModel.user_id))
+            .where(MembershipModel.community_id.in_(community_ids))
+            .group_by(MembershipModel.community_id)
+        )
+        res = await self.s.execute(stmt)
+        rows = res.all()
+        return {cid: int(count) for cid, count in rows}

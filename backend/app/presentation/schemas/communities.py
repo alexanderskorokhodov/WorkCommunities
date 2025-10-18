@@ -31,6 +31,7 @@ class CommunityOut(BaseModel):
     tags: List[str]
     is_archived: bool
     logo_media_id: Optional[str] = None
+    members_count: Optional[int] = None
 
 
 class CommunityWithMembersOut(CommunityOut):
