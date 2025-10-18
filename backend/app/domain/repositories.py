@@ -82,7 +82,19 @@ class IStoryRepo(Protocol):
 
 class IEventRepo(Protocol):
     async def list_for_user(self, user_id: str, limit: int = 20) -> Sequence[Event]: ...
-    async def create(self, *, community_id: str, title: str, starts_at, city: str | None = None) -> Event: ...
+    async def create(
+        self,
+        *,
+        community_id: str,
+        title: str,
+        starts_at,
+        city: str | None = None,
+        location: str | None = None,
+        description: str | None = None,
+        registration: str | None = None,
+        format: str | None = None,
+        media_id: str | None = None,
+    ) -> Event: ...
 
 
 class ICompanyRepo(Protocol):

@@ -8,6 +8,7 @@ from . import companies_endpoints
 from . import communities_endpoints
 from . import admin_endpoints
 from . import profiles_endpoints
+from . import reference_endpoints
 
 api = APIRouter()
 api.include_router(auth_endpoints.router, prefix="/auth", tags=["auth"])
@@ -18,4 +19,5 @@ api.include_router(companies_endpoints.router, prefix="/companies", tags=["compa
 api.include_router(communities_endpoints.router, prefix="/communities", tags=["communities"])
 api.include_router(admin_endpoints.router, prefix="/admin", tags=["admin"])
 api.include_router(profiles_endpoints.router, prefix="/profiles", tags=["profiles"])
+api.include_router(reference_endpoints.router, prefix="/reference", tags=["reference"])
 # NOTE: Other endpoints can be wired similarly.

@@ -10,6 +10,11 @@ class EventOut(BaseModel):
     title: str
     starts_at: datetime
     city: Optional[str] = None
+    location: Optional[str] = None
+    description: Optional[str] = None
+    registration: Optional[str] = None
+    format: Optional[str] = None
+    media_id: Optional[str] = None
 
 
 class EventCreateIn(BaseModel):
@@ -17,3 +22,8 @@ class EventCreateIn(BaseModel):
     title: str
     starts_at: datetime
     city: Optional[str] = None
+    location: Optional[str] = None
+    description: Optional[str] = None
+    registration: Optional[str] = None
+    format: Optional[str] = None
+    media_id: Optional[str] = None

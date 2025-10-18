@@ -10,7 +10,18 @@ from .sql_models import EventModel, MembershipModel, FollowModel
 
 
 def _from_row(m: EventModel) -> Event:
-    return Event(id=m.id, community_id=m.community_id, title=m.title, starts_at=m.starts_at, city=m.city)
+    return Event(
+        id=m.id,
+        community_id=m.community_id,
+        title=m.title,
+        starts_at=m.starts_at,
+        city=m.city,
+        location=m.location,
+        description=m.description,
+        registration=m.registration,
+        format=m.format,
+        media_id=m.media_id,
+    )
 
 
 class EventRepo(IEventRepo):
@@ -34,8 +45,30 @@ class EventRepo(IEventRepo):
         res = await self.s.execute(stmt)
         return [_from_row(r) for r in res.scalars().all()]
 
-    async def create(self, *, community_id: str, title: str, starts_at, city: str | None = None) -> Event:
-        m = EventModel(community_id=community_id, title=title, starts_at=starts_at, city=city)
+    async def create(
+        self,
+        *,
+        community_id: str,
+        title: str,
+        starts_at,
+        city: str | None = None,
+        location: str | None = None,
+        description: str | None = None,
+        registration: str | None = None,
+        format: str | None = None,
+        media_id: str | None = None,
+    ) -> Event:
+        m = EventModel(
+            community_id=community_id,
+            title=title,
+            starts_at=starts_at,
+            city=city,
+            location=location,
+            description=description,
+            registration=registration,
+            format=format,
+            media_id=media_id,
+        )
         self.s.add(m)
         await self.s.flush()
         return _from_row(m)

@@ -91,6 +91,11 @@ class EventModel(Base):
     title: Mapped[str] = mapped_column(String)
     starts_at: Mapped[datetime] = mapped_column(DateTime)
     city: Mapped[str | None] = mapped_column(String)
+    location: Mapped[str | None] = mapped_column(String)
+    description: Mapped[str | None] = mapped_column(Text)
+    registration: Mapped[str | None] = mapped_column(String)
+    format: Mapped[str | None] = mapped_column(String)
+    media_id: Mapped[str | None] = mapped_column(ForeignKey("media.id"), index=True)
 
 
 class OTPModel(Base):

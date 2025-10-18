@@ -115,6 +115,11 @@ class Event:
     title: str
     starts_at: datetime
     city: str | None
+    location: str | None = None
+    description: str | None = None
+    registration: str | None = None
+    format: str | None = None
+    media_id: str | None = None
 
 
 @dataclass
