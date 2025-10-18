@@ -73,6 +73,12 @@ async def ensure_tables():
 async def clear_db_keep_refs() -> None:
     """Delete rows from content tables, preserving spheres/skills/statuses."""
     async with engine.begin() as conn:
+        async def _safe_delete(tablename: str):
+            try:
+                await conn.execute(text(f"DELETE FROM {tablename}"))
+            except Exception:
+                # table may not exist in this DB (legacy/new mix) — ignore
+                pass
         # Order matters due to FKs
         for table in [
             # dependents first
@@ -88,6 +94,17 @@ async def clear_db_keep_refs() -> None:
             StoryModel.__table__,
             CaseModel.__table__,
             ContentModel.__table__,
+            # try legacy tables before communities
+            # legacy link table for post->media
+            # these are best-effort and may be absent
+        ]:
+            await conn.execute(delete(table))
+        # legacy tables clean up
+        await _safe_delete("post_media")
+        await _safe_delete("posts")
+        await _safe_delete("events")
+        # continue with entities that depend on communities/companies/users
+        for table in [
             CommunityModel.__table__,
             CompanyModel.__table__,
             ProfileModel.__table__,
