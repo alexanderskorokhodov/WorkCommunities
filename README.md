@@ -59,34 +59,61 @@
 - Справочники (`/reference`): сферы, навыки, статусы.
 
 ## Мобильная разработка (iOS/Android)
-- Код мобильного приложения лежит в `mobile/` и основан на Kotlin Multiplatform + Compose Multiplatform.
-  - Общий код и Android-приложение: `mobile/composeApp`
-  - iOS-приложение (Xcode-проект‑обертка): `mobile/iosApp`
+- Код мобильного приложения в `mobile/` на Kotlin Multiplatform + Compose Multiplatform.
+  - Общий модуль и Android: `mobile/composeApp`
+  - iOS‑обертка (Xcode): `mobile/iosApp`
+
+- Стек
+  - Kotlin Multiplatform (Android + iOS) + Compose Multiplatform UI
+  - Navigation Compose, AndroidX Lifecycle ViewModel
+  - Ktor Client + Kotlinx Serialization (логирование, таймауты)
+  - Koin DI (слои и зависимости «вниз»)
+  - Coil 3 (загрузка изображений) + Compose Resources
+  - Multiplatform Settings (локальное хранение токена/роли)
+
+- Сборка/запуск
+  - Gradle Kotlin DSL; модули: `composeApp` (Android/iOS), `iosApp` — точка входа для SwiftUI‑обертки
+  - Android: `./gradlew :composeApp:assembleDebug`
+  - iOS: запуск из Xcode проекта `mobile/iosApp`
+
+- Конфигурация
+  - compileSdk/target: 36, minSdk: 24 (см. `mobile/gradle/libs.versions.toml`)
+  - applicationId: `com.larkes.interestgroups` (см. `mobile/composeApp/build.gradle.kts`)
+
+- Интеграция с бэкендом
+  - Базовый URL: `http://91.197.99.176:8000` (см. `mobile/composeApp/src/commonMain/kotlin/com/larkes/interestgroups/utils/Constants.kt`)
+  - Ktor HttpClient: `ContentNegotiation(json)`, `Logging`, `HttpTimeout`, `defaultRequest { url(SERVER_URL) }` (см. `mobile/composeApp/src/commonMain/kotlin/com/larkes/interestgroups/di/AppModule.kt`)
+  - Хранение `access_token` в Settings; авторизация через Bearer (например, `PATCH /profiles/me`) (см. `mobile/composeApp/src/commonMain/kotlin/com/larkes/interestgroups/data/repository/AuthRepositoryImpl.kt`)
+
+- Архитектура слоёв
+  - UI: Compose экраны, навигация, тема/ресурсы (`mobile/composeApp/src/commonMain/kotlin/com/larkes/interestgroups/ui/*`)
+  - Presentation: ViewModel + StateFlow (`mobile/composeApp/src/commonMain/kotlin/com/larkes/interestgroups/presentation/*`)
+  - Domain: интерфейсы репозиториев и доменные модели (`mobile/composeApp/src/commonMain/kotlin/com/larkes/interestgroups/domain/*`)
+  - Data: DTO, реализации репозиториев, платформенные HTTP‑энджины (`mobile/composeApp/src/commonMain/kotlin/com/larkes/interestgroups/data/*`)
+  - DI: Koin‑модуль собирает HttpClient, Settings, репозитории и VM (`mobile/composeApp/src/commonMain/kotlin/com/larkes/interestgroups/di/AppModule.kt`)
+  - Зависимости направлены «вниз»: UI → Presentation → Domain → Data
+
+- Особенности платформ
+  - Android: `Application` инициализирует DI (`PlatformSDK.init(PlatformConfiguration(context))`) — `mobile/composeApp/src/androidMain/kotlin/com/larkes/interestgroups/InterestGroupsApp.kt`
+  - iOS: SwiftUI‑обертка через `ComposeUIViewController`, DI без контекста — `mobile/composeApp/src/iosMain/kotlin/com/larkes/interestgroups/MainViewController.kt`
+  - Ktor engine: Android — `Android`, iOS — `Darwin` (см. `mobile/composeApp/src/*Main/kotlin/com/larkes/interestgroups/data/network/HttpEngineFactory.*.kt`)
+
+- Потоки использования
+  - OTP‑логин (специалист/компания), верификация кода, сохранение токена/роли (`AuthRepositoryImpl`, `LoginViewModel`)
+  - Экранная навигация и разный нижний бар в зависимости от роли (`ui/navigation/Navigation.kt`, `ui/navigation/BottomNavBar.kt`)
 
 - Предварительные требования
-  - JDK 17 (подойдет и 11), Gradle Wrapper используется из репозитория.
-  - Android Studio Koala+ (или IntelliJ IDEA с KMP), Android SDK/эмулятор установлен.
-  - Xcode 15+ и iOS Simulator (для запуска на iOS).
+  - JDK 17, Gradle Wrapper из репозитория
+  - Android Studio Koala+ (или IntelliJ IDEA с KMP), Android SDK/эмулятор
+  - Xcode 15+ и iOS Simulator
 
-- Настройка API URL
-  - Базовый URL задается в `mobile/composeApp/src/commonMain/kotlin/com/larkes/interestgroups/utils/Constants.kt:3` в константе `SERVER_URL`.
-  - По умолчанию: `http://91.197.99.176:8000`. Для локальной разработки:
-    - Android эмулятор: `http://10.0.2.2:8000`
-    - iOS Simulator: `http://127.0.0.1:8000` (или IP машины)
-  - iOS и HTTP: для не‑HTTPS запросов на iOS нужно разрешение ATS. Либо используйте HTTPS‑эндпоинт, либо добавьте исключения в `mobile/iosApp/iosApp/Info.plist` (NSAppTransportSecurity/NSAllowsArbitraryLoads или точечные NSExceptionDomains).
-  - Android: разрешение на cleartext уже настроено через `mobile/composeApp/src/androidMain/res/xml/network_security_config.xml`.
+- Настройка API URL и сетевых политик
+  - Базовый URL в `Constants.SERVER_URL` — `mobile/composeApp/src/commonMain/kotlin/com/larkes/interestgroups/utils/Constants.kt`
+  - Локальная разработка: Android эмулятор `http://10.0.2.2:8000`, iOS Simulator `http://127.0.0.1:8000`
+  - iOS: для HTTP подключений разрешите ATS или используйте HTTPS (`mobile/iosApp/iosApp/Info.plist`)
+  - Android: cleartext разрешён (`mobile/composeApp/src/androidMain/res/xml/network_security_config.xml`)
 
-- Сборка/запуск Android
-  - Через IDE: выберите конфигурацию `composeApp` и нажмите Run на эмулятор/девайс.
-  - Через терминал из `mobile/`:
-    - Сборка APK: `./gradlew :composeApp:assembleDebug`
-    - Установка на подключенный девайс/эмулятор: `./gradlew :composeApp:installDebug`
-
-- Сборка/запуск iOS
-  - Откройте `mobile/iosApp/iosApp.xcodeproj` в Xcode, выберите симулятор (например, iPhone 15) и нажмите Run.
-  - Первый запуск выполнит Gradle‑таск для сборки KMM‑фреймворка (`embedAndSignAppleFrameworkForXcode`). При ошибках синхронизации выполните из `mobile/`: `./gradlew :composeApp:assemble`.
-
-- Подробнее см. `mobile/README.md`.
+Подробнее см. `mobile/README.md`.
 
 ## Запуск через Docker
 Требования: Docker, Docker Compose. Корневой `docker-compose.yml` билдит API из директории `backend/` и поднимает PostgreSQL.
