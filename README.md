@@ -59,9 +59,17 @@
 - Справочники (`/reference`): сферы, навыки, статусы.
 
 ## Мобильная разработка (iOS/Android)
+
+Превью приложения
+![Превью приложения](https://github.com/user-attachments/assets/44930667-ee1c-4ddd-8b6c-cc83247efebb)
+
 - Код мобильного приложения в `mobile/` на Kotlin Multiplatform + Compose Multiplatform.
   - Общий модуль и Android: `mobile/composeApp`
   - iOS‑обертка (Xcode): `mobile/iosApp`
+
+Qr code для скачивания приложения на Андроид
+![telegram-cloud-photo-size-2-5449844364097489473-x](https://github.com/user-attachments/assets/93f7a459-50ad-4e6d-81e0-799b2efeb32a)
+
 
 - Стек
   - Kotlin Multiplatform (Android + iOS) + Compose Multiplatform UI
