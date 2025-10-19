@@ -31,7 +31,11 @@ services:
       OTP_TTL_SECONDS: ${OTP_TTL_SECONDS:-300}
     ports:
       - "8000:8000"
+    volumes:
+      - media:/data/media
 
 volumes:
   pgdata:
+    driver: local
+  media:
     driver: local
