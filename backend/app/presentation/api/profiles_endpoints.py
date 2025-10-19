@@ -27,9 +27,9 @@ def _to_out(p, *, communities: list[CommunityOut] | None = None, joined_events: 
     return ProfileOut(
         id=p.id,
         user_id=p.user_id,
-        full_name=p.full_name,
-        portfolio_url=p.portfolio_url,
-        description=p.description,
+        full_name=p.full_name or "",
+        portfolio_url=p.portfolio_url or "",
+        description=p.description or "",
         skills=skills,
         statuses=statuses,
         communities=communities or [],
@@ -50,13 +50,13 @@ async def get_my_profile(session: AsyncSession = Depends(get_session), user=Depe
         CommunityOut(
             id=c.id,
             name=c.name,
-            company_id=c.company_id,
-            description=c.description,
-            telegram_url=c.telegram_url,
+            company_id=c.company_id or "",
+            description=c.description or "",
+            telegram_url=c.telegram_url or "",
             tags=c.tags,
-            is_archived=c.is_archived,
-            logo_media_id=c.logo_media_id,
-            members_count=None,
+            is_archived=bool(c.is_archived),
+            logo_media_id=c.logo_media_id or "",
+            members_count=0,
         )
         for c in communities
     ]
@@ -66,15 +66,15 @@ async def get_my_profile(session: AsyncSession = Depends(get_session), user=Depe
             community_id=e.community_id,
             title=e.title,
             event_date=e.event_date,
-            city=e.city,
-            location=e.location,
-            description=e.description,
-            registration=e.registration,
-            format=e.format,
-            media_id=e.media_id,
+            city=e.city or "",
+            location=e.location or "",
+            description=e.description or "",
+            registration=e.registration or "",
+            format=e.format or "",
+            media_id=e.media_id or "",
             tags=e.tags,
-            cost=e.cost,
-            participant_payout=e.participant_payout,
+            cost=int(e.cost or 0),
+            participant_payout=int(e.participant_payout or 0),
         )
         for e in joined
     ]
@@ -98,13 +98,13 @@ async def update_my_profile(data: ProfileUpdateIn, session: AsyncSession = Depen
         CommunityOut(
             id=c.id,
             name=c.name,
-            company_id=c.company_id,
-            description=c.description,
-            telegram_url=c.telegram_url,
+            company_id=c.company_id or "",
+            description=c.description or "",
+            telegram_url=c.telegram_url or "",
             tags=c.tags,
-            is_archived=c.is_archived,
-            logo_media_id=c.logo_media_id,
-            members_count=None,
+            is_archived=bool(c.is_archived),
+            logo_media_id=c.logo_media_id or "",
+            members_count=0,
         )
         for c in communities
     ]
@@ -114,15 +114,15 @@ async def update_my_profile(data: ProfileUpdateIn, session: AsyncSession = Depen
             community_id=e.community_id,
             title=e.title,
             event_date=e.event_date,
-            city=e.city,
-            location=e.location,
-            description=e.description,
-            registration=e.registration,
-            format=e.format,
-            media_id=e.media_id,
+            city=e.city or "",
+            location=e.location or "",
+            description=e.description or "",
+            registration=e.registration or "",
+            format=e.format or "",
+            media_id=e.media_id or "",
             tags=e.tags,
-            cost=e.cost,
-            participant_payout=e.participant_payout,
+            cost=int(e.cost or 0),
+            participant_payout=int(e.participant_payout or 0),
         )
         for e in joined
     ]

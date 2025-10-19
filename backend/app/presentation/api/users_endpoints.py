@@ -26,9 +26,9 @@ async def list_users(session: AsyncSession = Depends(get_session)):
         UserOut(
             id=u.id,
             role=u.role,
-            phone=u.phone,
-            email=u.email,
-            avatar_media_id=u.avatar_media_id,
+            phone=u.phone or "",
+            email=u.email or "",
+            avatar_media_id=u.avatar_media_id or "",
             created_at=u.created_at,
         )
         for u in users
@@ -53,10 +53,10 @@ async def get_user(user_id: str, session: AsyncSession = Depends(get_session)):
     return UserDetailOut(
         id=u.id,
         role=u.role,
-        phone=u.phone,
+        phone=u.phone or "",
         full_name=full_name,
-        portfolio_url=(prof.portfolio_url if prof else None),
-        description=(prof.description if prof else None),
+        portfolio_url=((prof.portfolio_url or "") if prof else ""),
+        description=((prof.description or "") if prof else ""),
         skills=[
             SkillForUserOut(
                 id=s.id,
@@ -74,7 +74,7 @@ async def get_user(user_id: str, session: AsyncSession = Depends(get_session)):
             StatusForUserOut(id=st.id, title=st.title)
             for st in (prof.statuses if prof else [])
         ],
-        avatar_media_id=u.avatar_media_id,
+        avatar_media_id=u.avatar_media_id or "",
         created_at=u.created_at,
         communities=[
             CommunityForUserOut(

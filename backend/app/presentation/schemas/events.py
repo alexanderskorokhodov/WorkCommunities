@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, root_validator
 from app.presentation.schemas.content import SkillOut
 
 
@@ -20,6 +20,17 @@ class EventOut(BaseModel):
     skills: List[SkillOut] = []
     cost: Optional[int] = None
     participant_payout: Optional[int] = None
+
+    @root_validator(pre=True)
+    def _fill_nulls(cls, values: dict):
+        for k in ("city", "location", "description", "registration", "format", "media_id"):
+            if values.get(k) is None:
+                values[k] = ""
+        if values.get("cost") is None:
+            values["cost"] = 0
+        if values.get("participant_payout") is None:
+            values["participant_payout"] = 0
+        return values
 
 
 class EventCreateIn(BaseModel):

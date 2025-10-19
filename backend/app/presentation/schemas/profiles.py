@@ -1,6 +1,6 @@
 from typing import Optional, List
 
-from pydantic import BaseModel, AnyUrl
+from pydantic import BaseModel, AnyUrl, root_validator
 from app.presentation.schemas.communities import CommunityOut
 from app.presentation.schemas.events import EventOut
 
@@ -33,6 +33,13 @@ class ProfileOut(BaseModel):
     statuses: List[StatusOut] = []
     communities: List[CommunityOut] = []
     joined_events: List[EventOut] = []
+
+    @root_validator(pre=True)
+    def _fill_nulls(cls, values: dict):
+        for k in ("full_name", "portfolio_url", "description"):
+            if values.get(k) is None:
+                values[k] = ""
+        return values
 
 
 class ProfileUpdateIn(BaseModel):

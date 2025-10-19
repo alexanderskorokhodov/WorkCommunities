@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, root_validator
 
 
 class CommunityForUserOut(BaseModel):
@@ -13,6 +13,15 @@ class CommunityForUserOut(BaseModel):
     tags: List[str]
     is_archived: bool
     logo_media_id: Optional[str] = None
+
+    @root_validator(pre=True)
+    def _fill_nulls(cls, values: dict):
+        if values.get("company_id") is None:
+            values["company_id"] = ""
+        for k in ("description", "telegram_url", "logo_media_id"):
+            if values.get(k) is None:
+                values[k] = ""
+        return values
 
 
 class SphereForUserOut(BaseModel):
@@ -41,6 +50,13 @@ class UserOut(BaseModel):
     avatar_media_id: Optional[str] = None
     created_at: datetime
 
+    @root_validator(pre=True)
+    def _fill_nulls(cls, values: dict):
+        for k in ("phone", "email", "avatar_media_id"):
+            if values.get(k) is None:
+                values[k] = ""
+        return values
+
 
 class UserDetailOut(BaseModel):
     id: str
@@ -54,3 +70,10 @@ class UserDetailOut(BaseModel):
     avatar_media_id: Optional[str] = None
     created_at: datetime
     communities: List[CommunityForUserOut] = []
+
+    @root_validator(pre=True)
+    def _fill_nulls(cls, values: dict):
+        for k in ("phone", "full_name", "portfolio_url", "description", "avatar_media_id"):
+            if values.get(k) is None:
+                values[k] = ""
+        return values

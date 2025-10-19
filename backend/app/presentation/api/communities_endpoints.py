@@ -58,13 +58,13 @@ async def list_my_communities(
     return [
         CommunityOut(
             id=i.id,
-            company_id=i.company_id,
+            company_id=i.company_id or "",
             name=i.name,
-            description=i.description,
-            telegram_url=i.telegram_url,
+            description=i.description or "",
+            telegram_url=i.telegram_url or "",
             tags=i.tags,
-            is_archived=i.is_archived,
-            logo_media_id=i.logo_media_id,
+            is_archived=bool(i.is_archived),
+            logo_media_id=i.logo_media_id or "",
         )
         for i in items
     ]
@@ -82,13 +82,13 @@ async def list_joinable_communities(
     return [
         CommunityOut(
             id=i.id,
-            company_id=i.company_id,
+            company_id=i.company_id or "",
             name=i.name,
-            description=i.description,
-            telegram_url=i.telegram_url,
+            description=i.description or "",
+            telegram_url=i.telegram_url or "",
             tags=i.tags,
-            is_archived=i.is_archived,
-            logo_media_id=i.logo_media_id,
+            is_archived=bool(i.is_archived),
+            logo_media_id=i.logo_media_id or "",
         )
         for i in items
     ]
@@ -100,13 +100,13 @@ async def list_communities(session: AsyncSession = Depends(get_session)):
     return [
         CommunityOut(
             id=i.id,
-            company_id=i.company_id,
+            company_id=i.company_id or "",
             name=i.name,
-            description=i.description,
-            telegram_url=i.telegram_url,
+            description=i.description or "",
+            telegram_url=i.telegram_url or "",
             tags=i.tags,
-            is_archived=i.is_archived,
-            logo_media_id=i.logo_media_id,
+            is_archived=bool(i.is_archived),
+            logo_media_id=i.logo_media_id or "",
         )
         for i in items
     ]
@@ -122,14 +122,14 @@ async def list_company_communities(company_id: str, session: AsyncSession = Depe
     return [
         CommunityOut(
             id=i.id,
-            company_id=i.company_id,
+            company_id=i.company_id or "",
             name=i.name,
-            description=i.description,
-            telegram_url=i.telegram_url,
+            description=i.description or "",
+            telegram_url=i.telegram_url or "",
             tags=i.tags,
-            is_archived=i.is_archived,
-            logo_media_id=i.logo_media_id,
-            members_count=counts.get(i.id, 0),
+            is_archived=bool(i.is_archived),
+            logo_media_id=i.logo_media_id or "",
+            members_count=int(counts.get(i.id, 0) or 0),
         )
         for i in items
     ]
@@ -160,13 +160,13 @@ async def get_community_detail(community_id: str, session: AsyncSession = Depend
 
     return CommunityDetailOut(
         id=community.id,
-        company_id=community.company_id,
+        company_id=community.company_id or "",
         name=community.name,
-        description=community.description,
-        telegram_url=community.telegram_url,
+        description=community.description or "",
+        telegram_url=community.telegram_url or "",
         tags=community.tags,
-        is_archived=community.is_archived,
-        logo_media_id=community.logo_media_id,
+        is_archived=bool(community.is_archived),
+        logo_media_id=community.logo_media_id or "",
         cases=[
             CaseOut(
                 id=cs.id,

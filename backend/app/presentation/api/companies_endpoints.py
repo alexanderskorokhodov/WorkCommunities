@@ -51,7 +51,7 @@ async def list_companies(session: AsyncSession = Depends(get_session)):
     out: list[CompanyOut] = []
     for c in companies:
         skills = await _skills_from_tag_ids(session, c.tags)
-        out.append(CompanyOut(id=c.id, name=c.name, description=c.description, logo_media_id=c.logo_media_id, skills=skills))
+        out.append(CompanyOut(id=c.id, name=c.name, description=c.description or "", logo_media_id=c.logo_media_id or "", skills=skills))
     return out
 
 
@@ -67,21 +67,21 @@ async def get_my_company(session: AsyncSession = Depends(get_session), company=D
     return CompanyDetailOut(
         id=company.id,
         name=company.name,
-        description=company.description,
-        logo_media_id=company.logo_media_id,
+        description=company.description or "",
+        logo_media_id=company.logo_media_id or "",
         skills=await _skills_from_tag_ids(session, company.tags),
         media=[MediaOut(id=m.id, kind=m.kind.value if hasattr(m.kind, "value") else m.kind, mime=m.mime, ext=m.ext, size=m.size, url=m.url) for m in media],
         communities=[
             CommunityOut(
                 id=i.id,
-                company_id=i.company_id,
+                company_id=i.company_id or "",
                 name=i.name,
-                description=i.description,
-                telegram_url=i.telegram_url,
+                description=i.description or "",
+                telegram_url=i.telegram_url or "",
                 tags=i.tags,
-                is_archived=i.is_archived,
-                logo_media_id=i.logo_media_id,
-                members_count=counts.get(i.id, 0),
+                is_archived=bool(i.is_archived),
+                logo_media_id=i.logo_media_id or "",
+                members_count=int(counts.get(i.id, 0) or 0),
             )
             for i in communities
         ],
@@ -104,21 +104,21 @@ async def get_company(company_id: str, session: AsyncSession = Depends(get_sessi
     return CompanyDetailOut(
         id=company.id,
         name=company.name,
-        description=company.description,
-        logo_media_id=company.logo_media_id,
+        description=company.description or "",
+        logo_media_id=company.logo_media_id or "",
         skills=await _skills_from_tag_ids(session, company.tags),
         media=[MediaOut(id=m.id, kind=m.kind.value if hasattr(m.kind, "value") else m.kind, mime=m.mime, ext=m.ext, size=m.size, url=m.url) for m in media],
         communities=[
             CommunityOut(
                 id=i.id,
-                company_id=i.company_id,
+                company_id=i.company_id or "",
                 name=i.name,
-                description=i.description,
-                telegram_url=i.telegram_url,
+                description=i.description or "",
+                telegram_url=i.telegram_url or "",
                 tags=i.tags,
-                is_archived=i.is_archived,
-                logo_media_id=i.logo_media_id,
-                members_count=counts.get(i.id, 0),
+                is_archived=bool(i.is_archived),
+                logo_media_id=i.logo_media_id or "",
+                members_count=int(counts.get(i.id, 0) or 0),
             )
             for i in communities
         ],
@@ -133,7 +133,7 @@ async def my_followed_companies(session: AsyncSession = Depends(get_session), us
     out: list[CompanyOut] = []
     for c in companies:
         skills = await _skills_from_tag_ids(session, c.tags)
-        out.append(CompanyOut(id=c.id, name=c.name, description=c.description, logo_media_id=c.logo_media_id, skills=skills))
+        out.append(CompanyOut(id=c.id, name=c.name, description=c.description or "", logo_media_id=c.logo_media_id or "", skills=skills))
     return out
 
 

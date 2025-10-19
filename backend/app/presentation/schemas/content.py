@@ -1,7 +1,7 @@
 from typing import Optional, List
 from datetime import datetime
 
-from pydantic import BaseModel
+from pydantic import BaseModel, root_validator
 
 
 class MediaOut(BaseModel):
@@ -11,6 +11,12 @@ class MediaOut(BaseModel):
     ext: Optional[str] = None
     size: int
     url: str
+
+    @root_validator(pre=True)
+    def _fill_nulls_media(cls, values: dict):
+        if values.get("ext") is None:
+            values["ext"] = ""
+        return values
 
 
 class ContentSphereOut(BaseModel):
@@ -59,6 +65,17 @@ class PostOut(BaseModel):
     cost: Optional[int] = None
     participant_payout: Optional[int] = None
 
+    @root_validator(pre=True)
+    def _fill_nulls_post(cls, values: dict):
+        # body could be optional in other paths; ensure empty string
+        if values.get("body") is None:
+            values["body"] = ""
+        if values.get("cost") is None:
+            values["cost"] = 0
+        if values.get("participant_payout") is None:
+            values["participant_payout"] = 0
+        return values
+
 
 class ContentItemOut(BaseModel):
     id: str
@@ -72,6 +89,16 @@ class ContentItemOut(BaseModel):
     skills: List[SkillOut] = []
     cost: Optional[int] = None
     participant_payout: Optional[int] = None
+
+    @root_validator(pre=True)
+    def _fill_nulls_item(cls, values: dict):
+        if values.get("body") is None:
+            values["body"] = ""
+        if values.get("cost") is None:
+            values["cost"] = 0
+        if values.get("participant_payout") is None:
+            values["participant_payout"] = 0
+        return values
 
 
 class StoryCreateIn(BaseModel):

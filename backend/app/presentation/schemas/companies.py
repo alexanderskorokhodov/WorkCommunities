@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, root_validator
 from app.presentation.schemas.content import MediaOut, SkillOut
 from .communities import CommunityOut
 
@@ -25,6 +25,13 @@ class CompanyOut(BaseModel):
     description: Optional[str] = None
     logo_media_id: Optional[str] = None
     skills: list[SkillOut] = []
+
+    @root_validator(pre=True)
+    def _fill_nulls(cls, values: dict):
+        for k in ("description", "logo_media_id"):
+            if values.get(k) is None:
+                values[k] = ""
+        return values
 
 
 class CompanyDetailOut(CompanyOut):
