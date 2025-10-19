@@ -189,5 +189,3 @@ docker compose exec api python -m app.scripts.e2e_company_flow --base-url http:/
 - `backend/app/adapters` — БД‑адаптеры (`engine`, `session`).
 - `backend/app/core` — конфигурация, зависимости авторизации и безопасность (JWT, роли).
 - `backend/app/scripts` — вспомогательные и демо‑скрипты.
-
-Если нужна помощь с развертыванием на окружении CI/CD, тестовыми данными или дополнительной документацией (ER‑диаграмма, коллекция для Postman) — дайте знать.
