@@ -1,5 +1,8 @@
 # WorkCommunities
 
+Скринкаст: https://drive.google.com/file/d/1zNtEEyTdpEqtk80JCnupcE4QONh3CKAF/view
+
+
 Бэкенд сервиса сообществ и компаний для публикаций, историй и событий. Основан на FastAPI, асинхронном SQLAlchemy и разделённой на слои архитектуре (domain → usecases → infrastructure → presentation).
 
 Развёртывание: сервис поднят на Reg.ru двумя способами — через Docker Compose и через pm2 с tuna для доступа по HTTPS. Публичный доступ: http://91.197.99.176:8000 (Swagger: http://91.197.99.176:8000/docs).
