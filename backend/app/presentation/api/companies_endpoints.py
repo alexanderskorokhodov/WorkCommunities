@@ -51,7 +51,7 @@ async def list_companies(session: AsyncSession = Depends(get_session)):
     out: list[CompanyOut] = []
     for c in companies:
         skills = await _skills_from_tag_ids(session, c.tags)
-        out.append(CompanyOut(id=c.id, name=c.name, description=c.description, logo_media_id=c.logo_media_id, tags=c.tags, skills=skills))
+        out.append(CompanyOut(id=c.id, name=c.name, description=c.description, logo_media_id=c.logo_media_id, skills=skills))
     return out
 
 
@@ -69,7 +69,6 @@ async def get_my_company(session: AsyncSession = Depends(get_session), company=D
         name=company.name,
         description=company.description,
         logo_media_id=company.logo_media_id,
-        tags=company.tags,
         skills=await _skills_from_tag_ids(session, company.tags),
         media=[MediaOut(id=m.id, kind=m.kind.value if hasattr(m.kind, "value") else m.kind, mime=m.mime, ext=m.ext, size=m.size, url=m.url) for m in media],
         communities=[
@@ -107,7 +106,6 @@ async def get_company(company_id: str, session: AsyncSession = Depends(get_sessi
         name=company.name,
         description=company.description,
         logo_media_id=company.logo_media_id,
-        tags=company.tags,
         skills=await _skills_from_tag_ids(session, company.tags),
         media=[MediaOut(id=m.id, kind=m.kind.value if hasattr(m.kind, "value") else m.kind, mime=m.mime, ext=m.ext, size=m.size, url=m.url) for m in media],
         communities=[
@@ -135,7 +133,7 @@ async def my_followed_companies(session: AsyncSession = Depends(get_session), us
     out: list[CompanyOut] = []
     for c in companies:
         skills = await _skills_from_tag_ids(session, c.tags)
-        out.append(CompanyOut(id=c.id, name=c.name, description=c.description, logo_media_id=c.logo_media_id, tags=c.tags, skills=skills))
+        out.append(CompanyOut(id=c.id, name=c.name, description=c.description, logo_media_id=c.logo_media_id, skills=skills))
     return out
 
 
@@ -166,4 +164,4 @@ async def update_my_company(
     if media_uids is not None:
         await MediaRepo(session).replace_for_company(company.id, media_uids)
     skills = await _skills_from_tag_ids(session, c.tags)
-    return CompanyOut(id=c.id, name=c.name, description=c.description, logo_media_id=c.logo_media_id, tags=c.tags, skills=skills)
+    return CompanyOut(id=c.id, name=c.name, description=c.description, logo_media_id=c.logo_media_id, skills=skills)

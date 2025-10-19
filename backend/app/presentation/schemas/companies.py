@@ -24,7 +24,6 @@ class CompanyOut(BaseModel):
     name: str
     description: Optional[str] = None
     logo_media_id: Optional[str] = None
-    tags: list[str] = []
     skills: list[SkillOut] = []
 
 
