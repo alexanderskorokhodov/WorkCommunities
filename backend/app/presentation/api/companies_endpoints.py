@@ -9,18 +9,50 @@ from app.infrastructure.repos.company_follow_repo import CompanyFollowRepo
 from app.infrastructure.repos.membership_repo import MembershipRepo
 from app.infrastructure.repos.media_repo import MediaRepo
 from app.presentation.schemas.companies import CompanyOut, CompanyUpdateIn, CompanyDetailOut
-from app.presentation.schemas.content import MediaOut
+from app.presentation.schemas.content import MediaOut, SkillOut, ContentSphereOut
+from app.infrastructure.repos.sql_models import SkillModel, SphereModel
+from sqlalchemy import select
 from app.presentation.schemas.communities import CommunityOut
 from app.usecases.companies import CompanyUseCase
 
 router = APIRouter()
 
 
+async def _skills_from_tag_ids(session: AsyncSession, tag_ids: list[str]) -> list[SkillOut]:
+    if not tag_ids:
+        return []
+    res = await session.execute(select(SkillModel).where(SkillModel.id.in_(tag_ids)))
+    skill_models = res.scalars().all()
+    sphere_ids = list({m.sphere_id for m in skill_models})
+    spheres_map = {}
+    if sphere_ids:
+        sp_res = await session.execute(select(SphereModel).where(SphereModel.id.in_(sphere_ids)))
+        spheres_map = {sp.id: sp for sp in sp_res.scalars().all()}
+    by_id = {m.id: m for m in skill_models}
+    out: list[SkillOut] = []
+    for sid in tag_ids:
+        m = by_id.get(sid)
+        if not m:
+            continue
+        sp = spheres_map.get(m.sphere_id)
+        out.append(SkillOut(
+            id=m.id,
+            title=m.title,
+            sphere_id=m.sphere_id,
+            sphere=(ContentSphereOut(id=sp.id, title=sp.title, background_color=sp.background_color, text_color=sp.text_color) if sp else None),
+        ))
+    return out
+
+
 @router.get("/", response_model=list[CompanyOut])
 async def list_companies(session: AsyncSession = Depends(get_session)):
     repo = CompanyRepo(session)
     companies = await repo.list_all()
-    return [CompanyOut(id=c.id, name=c.name, description=c.description, logo_media_id=c.logo_media_id, tags=c.tags) for c in companies]
+    out: list[CompanyOut] = []
+    for c in companies:
+        skills = await _skills_from_tag_ids(session, c.tags)
+        out.append(CompanyOut(id=c.id, name=c.name, description=c.description, logo_media_id=c.logo_media_id, tags=c.tags, skills=skills))
+    return out
 
 
 @router.get("/me", response_model=CompanyDetailOut, dependencies=[Depends(role_required("company"))])
@@ -38,6 +70,7 @@ async def get_my_company(session: AsyncSession = Depends(get_session), company=D
         description=company.description,
         logo_media_id=company.logo_media_id,
         tags=company.tags,
+        skills=await _skills_from_tag_ids(session, company.tags),
         media=[MediaOut(id=m.id, kind=m.kind.value if hasattr(m.kind, "value") else m.kind, mime=m.mime, ext=m.ext, size=m.size, url=m.url) for m in media],
         communities=[
             CommunityOut(
@@ -75,6 +108,7 @@ async def get_company(company_id: str, session: AsyncSession = Depends(get_sessi
         description=company.description,
         logo_media_id=company.logo_media_id,
         tags=company.tags,
+        skills=await _skills_from_tag_ids(session, company.tags),
         media=[MediaOut(id=m.id, kind=m.kind.value if hasattr(m.kind, "value") else m.kind, mime=m.mime, ext=m.ext, size=m.size, url=m.url) for m in media],
         communities=[
             CommunityOut(
@@ -98,7 +132,11 @@ async def get_company(company_id: str, session: AsyncSession = Depends(get_sessi
 async def my_followed_companies(session: AsyncSession = Depends(get_session), user=Depends(get_current_user)):
     uc = CompanyUseCase(companies=CompanyRepo(session), company_follows=CompanyFollowRepo(session))
     companies = await uc.list_followed(user.id)
-    return [CompanyOut(id=c.id, name=c.name, description=c.description, logo_media_id=c.logo_media_id, tags=c.tags) for c in companies]
+    out: list[CompanyOut] = []
+    for c in companies:
+        skills = await _skills_from_tag_ids(session, c.tags)
+        out.append(CompanyOut(id=c.id, name=c.name, description=c.description, logo_media_id=c.logo_media_id, tags=c.tags, skills=skills))
+    return out
 
 
 @router.post("/{company_id}/follow")
@@ -127,4 +165,5 @@ async def update_my_company(
     c = await uc.update(company.id, **payload)
     if media_uids is not None:
         await MediaRepo(session).replace_for_company(company.id, media_uids)
-    return CompanyOut(id=c.id, name=c.name, description=c.description, logo_media_id=c.logo_media_id, tags=c.tags)
+    skills = await _skills_from_tag_ids(session, c.tags)
+    return CompanyOut(id=c.id, name=c.name, description=c.description, logo_media_id=c.logo_media_id, tags=c.tags, skills=skills)

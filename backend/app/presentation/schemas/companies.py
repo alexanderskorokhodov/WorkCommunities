@@ -1,7 +1,7 @@
 from typing import Optional
 
 from pydantic import BaseModel
-from app.presentation.schemas.content import MediaOut
+from app.presentation.schemas.content import MediaOut, SkillOut
 from .communities import CommunityOut
 
 
@@ -25,6 +25,7 @@ class CompanyOut(BaseModel):
     description: Optional[str] = None
     logo_media_id: Optional[str] = None
     tags: list[str] = []
+    skills: list[SkillOut] = []
 
 
 class CompanyDetailOut(CompanyOut):
