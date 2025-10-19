@@ -1,4 +1,5 @@
 from typing import List, Optional
+from datetime import datetime
 
 from pydantic import BaseModel
 from .cases import CaseOut
@@ -35,10 +36,20 @@ class CommunityOut(BaseModel):
 
 
 class CommunityWithMembersOut(CommunityOut):
+    # Backward-compat alias not used by current endpoints; prefer CommunityDetailOut
     members: List[UserOut] = []
+
+
+class CommunityMemberOut(BaseModel):
+    id: str
+    role: str
+    phone: Optional[str] = None
+    full_name: Optional[str] = None
+    avatar_media_id: Optional[str] = None
+    created_at: datetime
 
 
 class CommunityDetailOut(CommunityOut):
     cases: List[CaseOut] = []
-    # Include members alongside cases for community detail endpoint
-    members: List[UserOut] = []
+    # Members list for community detail: expose full_name, omit email
+    members: List[CommunityMemberOut] = []

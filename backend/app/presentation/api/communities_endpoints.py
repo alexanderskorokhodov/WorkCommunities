@@ -17,12 +17,14 @@ from app.presentation.schemas.communities import (
     CommunityUpdateIn,
     CommunityWithMembersOut,
     CommunityDetailOut,
+    CommunityMemberOut,
 )
 from app.presentation.schemas.cases import CaseOut, CaseCreateIn
 from app.presentation.schemas.content import PostOut, MediaOut, SkillOut, ContentSphereOut
 from app.usecases.communities import CommunityUseCase
 from app.infrastructure.repos.membership_repo import MembershipRepo
 from app.infrastructure.repos.user_repo import UserRepo
+from app.infrastructure.repos.profile_repo import ProfileRepo
 
 router = APIRouter()
 
@@ -148,10 +150,13 @@ async def get_community_detail(community_id: str, session: AsyncSession = Depend
     users: list = []
     if member_ids:
         urepo = UserRepo(session)
+        prepo = ProfileRepo(session)
         for uid in member_ids:
             u = await urepo.get_by_id(uid)
-            if u:
-                users.append(u)
+            if not u:
+                continue
+            prof = await prepo.get_by_user_id(u.id)
+            users.append((u, prof.full_name if prof else None))
 
     return CommunityDetailOut(
         id=community.id,
@@ -174,15 +179,15 @@ async def get_community_detail(community_id: str, session: AsyncSession = Depend
             for cs in cases
         ],
         members=[
-            {
-                "id": u.id,
-                "role": u.role,
-                "phone": u.phone,
-                "email": u.email,
-                "avatar_media_id": u.avatar_media_id,
-                "created_at": u.created_at,
-            }
-            for u in users
+            CommunityMemberOut(
+                id=u.id,
+                role=u.role,
+                phone=u.phone,
+                full_name=full_name,
+                avatar_media_id=u.avatar_media_id,
+                created_at=u.created_at,
+            )
+            for (u, full_name) in users
         ],
     )
 
