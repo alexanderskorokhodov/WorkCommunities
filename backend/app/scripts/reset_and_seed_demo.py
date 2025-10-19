@@ -204,9 +204,11 @@ async def seed_users(session, media_map: Dict[str, str]) -> None:
             status_uids=status_ids,
         )
         _log(f"Updated profile: user_id={u.id}, full_name={full_name}")
-        # Set avatar for the first user
-        if idx == 0 and "avatar1.png" in media_map:
-            await session.execute(update(UserModel).where(UserModel.id == u.id).values(avatar_media_id=media_map["avatar1.png"]))
+        # Set avatar for ALL users to the uploaded default avatar, if present
+        if "avatar1.png" in media_map:
+            await session.execute(
+                update(UserModel).where(UserModel.id == u.id).values(avatar_media_id=media_map["avatar1.png"]) 
+            )
             _log(f"Set avatar for user {u.id}: media_id={media_map['avatar1.png']}")
     await session.flush()
 
@@ -246,6 +248,22 @@ async def seed_companies_and_communities(session, media_map: Dict[str, str]) -> 
         logo_media_id=media_map.get("community3.png"),
     )
     _log(f"Created community: id={comm3.id}, company_id={comm3.company_id}, name={comm3.name}, logo_media_id={comm3.logo_media_id}")
+    # New communities with cases (1): Клуб электро-энергетики
+    comm4 = await community_repo.create(
+        name="Клуб электро-энергетики",
+        company_id=c1.id,
+        description="Работаем над схемами управления питанием, микромодулями и системами энергосбережения в электронике.",
+        logo_media_id=None,
+    )
+    _log(f"Created community: id={comm4.id}, company_id={comm4.company_id}, name={comm4.name}")
+    # New communities with cases (2): Цифровая экономика
+    comm5 = await community_repo.create(
+        name="Цифровая экономика",
+        company_id=c1.id,
+        description="Решения для смарт-инфраструктуры. Изучаем, как микроновские технологии применяются в транспорте, логистике, IoT.",
+        logo_media_id=None,
+    )
+    _log(f"Created community: id={comm5.id}, company_id={comm5.company_id}, name={comm5.name}")
 
     # Company 2: R-Pharm
     desc_rpharm = (
@@ -271,23 +289,49 @@ async def seed_companies_and_communities(session, media_map: Dict[str, str]) -> 
 
     return {
         "companies": {"mikron": c1.id, "rpharm": c2.id},
-        "communities": {"c1": comm1.id, "c2": comm2.id, "c3": comm3.id},
+        "communities": {"c1": comm1.id, "c2": comm2.id, "c3": comm3.id, "c4": comm4.id, "c5": comm5.id},
     }
 
 
 async def seed_cases(session, ids: dict) -> None:
-    """Seed requested case into community 'Проектирование и сборка' (c3)."""
+    """Seed cases for selected communities, including two new ones."""
     case_repo = CaseRepo(session)
-    title = "Умная система управления питанием микрочипа"
-    date = dt.datetime(2025, 10, 17, 0, 0, 0)
+
+    # Existing sample case for community c3
     cs = await case_repo.create(
         community_id=ids["communities"]["c3"],
-        title=title,
+        title="Умная система управления питанием микрочипа",
         description=None,
-        date=date,
+        date=dt.datetime(2025, 10, 17, 0, 0, 0),
         solutions_count=28,
     )
     _log(f"Created case: title={cs.title}, community_id={cs.community_id}, date={cs.date}, solutions_count={cs.solutions_count}")
+
+    # New community c4: Клуб электро-энергетики
+    c4_id = ids["communities"]["c4"]
+    for title, y, m, d, cnt in [
+        ("Интеллектуальный модуль распределения питания для микросерверов", 2025, 9, 14, 7),
+        ("Система рекуперации энергии для роботизированных линий", 2025, 7, 3, 4),
+    ]:
+        c = await case_repo.create(
+            community_id=c4_id,
+            title=title,
+            description=None,
+            date=dt.datetime(y, m, d, 0, 0, 0),
+            solutions_count=cnt,
+        )
+        _log(f"Created case: title={c.title}, community_id={c.community_id}, date={c.date}, solutions_count={c.solutions_count}")
+
+    # New community c5: Цифровая экономика
+    c5_id = ids["communities"]["c5"]
+    c = await case_repo.create(
+        community_id=c5_id,
+        title="IoT-платформа для мониторинга городского транспорта на чипах Микрон",
+        description=None,
+        date=dt.datetime(2025, 8, 22, 0, 0, 0),
+        solutions_count=6,
+    )
+    _log(f"Created case: title={c.title}, community_id={c.community_id}, date={c.date}, solutions_count={c.solutions_count}")
 
 
 async def seed_post(session, ids: dict, media_map: Dict[str, str]) -> None:
