@@ -60,6 +60,7 @@ from app.infrastructure.repos.community_repo import CommunityRepo
 from app.infrastructure.repos.post_repo import PostRepo
 from app.infrastructure.repos.event_repo import EventRepo
 from app.infrastructure.repos.case_repo import CaseRepo
+from app.infrastructure.repos.media_repo import MediaRepo
 
 
 def _log(msg: str) -> None:
@@ -264,6 +265,13 @@ async def seed_companies_and_communities(session, media_map: Dict[str, str]) -> 
         logo_media_id=None,
     )
     _log(f"Created community: id={comm5.id}, company_id={comm5.company_id}, name={comm5.name}")
+
+    # Attach additional company media for Микрон, if present
+    micron_media_keys = ["media1.png", "media2.png", "media3.png"]
+    micron_media_ids = [media_map[k] for k in micron_media_keys if k in media_map]
+    if micron_media_ids:
+        await MediaRepo(session).replace_for_company(c1.id, micron_media_ids)
+        _log(f"Attached {len(micron_media_ids)} media to company {c1.name}: {micron_media_keys}")
 
     # Company 2: R-Pharm
     desc_rpharm = (

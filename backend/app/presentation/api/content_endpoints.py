@@ -153,21 +153,52 @@ async def update_post(post_id: str, data: PostUpdateIn, session: AsyncSession = 
     )
 
 
-@router.get("/posts/{post_id}", response_model=PostOut)
+@router.get("/posts/{post_id}", response_model=ContentItemOut)
 async def get_post(post_id: str, session: AsyncSession = Depends(get_session)):
-    uc = ContentUseCase(posts=PostRepo(session), stories=StoryRepo(session), media=MediaRepo(session))
-    post, media = await uc.get_post_full(post_id)
-    if not post:
+    # Load raw content row to preserve type-specific fields (event_date, description)
+    row = (await session.execute(select(ContentModel).where(ContentModel.id == post_id))).scalar_one_or_none()
+    if not row:
         raise HTTPException(404, "Not found")
-    skills = await PostRepo(session).list_skills_for_post(post.id)
-    return PostOut(
-        id=post.id, community_id=post.community_id,
-        title=post.title, body=post.body,
+    media_repo = MediaRepo(session)
+    media = await media_repo.list_for_content(row.id)
+    # Fallback: if no content_media links, try legacy single media_id field
+    if not media and getattr(row, "media_id", None):
+        m = await media_repo.get(row.media_id)
+        if m:
+            media = [m]
+    # Build skills enriched with sphere (same as list)
+    skills = await PostRepo(session).list_skills_for_post(row.id)
+    def _skill_to_out(s) -> SkillOut:
+        sp = getattr(s, "sphere", None)
+        return SkillOut(
+            id=s.id,
+            title=s.title,
+            sphere_id=s.sphere_id,
+            sphere=(
+                ContentSphereOut(
+                    id=sp.id,
+                    title=sp.title,
+                    background_color=sp.background_color,
+                    text_color=sp.text_color,
+                ) if sp else None
+            ),
+        )
+    # Unify body/event fields with list endpoint behavior
+    body = row.body if row.type == "post" else (row.description or None)
+    # Parse tags from comma-separated string for consistency
+    tags = [t.strip() for t in (row.tags or "").split(",") if t.strip()]
+    return ContentItemOut(
+        id=row.id,
+        community_id=row.community_id,
+        type=row.type,
+        title=row.title,
+        body=body,
+        event_date=row.event_date,
         media=[_media_to_out(m) for m in media],
-        tags=post.tags,
-        skills=[SkillOut(id=s.id, title=s.title, sphere_id=s.sphere_id) for s in skills],
-        cost=post.cost,
-        participant_payout=post.participant_payout,
+        tags=tags,
+        skills=[_skill_to_out(s) for s in skills],
+        cost=row.cost,
+        participant_payout=row.participant_payout,
     )
 
 
